@@ -1,0 +1,41 @@
+{
+	"version": "0.0.1",
+	"name": "@fxjs/sql-query",
+	"author": "Richard <richardo2016@gmail.com>",
+	"description": "Fibjs SQL query builder",
+	"keywords": [
+		"sql",
+		"query"
+	],
+	"license": "MIT",
+	"repository": {
+		"url": "http://github.com/fxjs-modules/sql-query"
+	},
+	"scripts": {
+		"build": "fib-typify src -o lib",
+		"test": "fibjs test/run",
+		"ci": "npm run build && npm run test"
+	},
+	"main": "./lib/Query",
+	"engines": {
+		"fibjs": "*"
+	},
+	"analyse": false,
+	"devDependencies": {
+		"@fibjs/ci": "^2.1.0",
+		"@types/fibjs": "^0.26.5",
+		"fib-typify": "^0.4.1"
+	},
+	"ci": {
+		"type": "travis, appveyor",
+		"version": [
+			"0.21.0",
+			"0.22.0",
+			"0.23.0",
+			"0.24.0",
+			"0.25.0",
+			"0.26.0",
+			"0.26.1"
+		]
+	}
+}

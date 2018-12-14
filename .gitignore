@@ -1,0 +1,10 @@
+*.sublime-*
+*.njsproj
+.DS_Store
+node_modules
+test.js
+
+package-lock.json
+
+lib
+*.db*
