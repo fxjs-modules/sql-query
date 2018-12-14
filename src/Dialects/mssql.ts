@@ -1,7 +1,9 @@
-var util    = require("util");
-var helpers = require("../Helpers");
+/// <reference types="fibjs" />
 
-exports.DataTypes = {
+import util    = require("util");
+import helpers = require("../Helpers");
+
+const DataTypes = {
 	id:    'INT IDENTITY(1,1) NOT NULL PRIMARY KEY',
 	int:   'INT',
 	float: 'FLOAT',
@@ -10,35 +12,38 @@ exports.DataTypes = {
 };
 
 
-exports.escape = function (query, args) {
-	return helpers.escapeQuery(exports, query, args);
+const escape = function (
+	query: FxSqlQuerySql.SqlFragmentStr,
+	args: FxSqlQuerySql.SqlAssignmentValues
+) {
+	return helpers.escapeQuery(Dialect, query, args);
 }
 
-exports.escapeId = function () {
-	return Array.prototype.slice.apply(arguments).map(function (el) {
+function escapeId (...els: any[]) {
+	return els.map(function (el) {
 		if (typeof el == "object") {
-			return el.str.replace(/\?:(id|value)/g, function (m) {
+			return el.str.replace(/\?:(id|value)/g, function (m: string) {
 				if (m == "?:id") {
-					return exports.escapeId(el.escapes.shift());
+					return escapeId(el.escapes.shift());
 				}
-				// ?:value
-				return exports.escapeVal(el.escapes.shift());
+
+				return escapeVal(el.escapes.shift());
 			});
 		}
 		return "[" + el + "]";
 	}).join(".");
 };
 
-exports.escapeVal = function (val, timeZone) {
+const escapeVal = function (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) {
 	if (val === undefined || val === null || typeof val === "symbol") {
 		return 'NULL';
 	}
 
 	if (Array.isArray(val)) {
 		if (val.length === 1 && Array.isArray(val[0])) {
-			return "(" + val[0].map(exports.escapeVal.bind(this)) + ")";
+			return "(" + val[0].map(escapeVal.bind(this)) + ")";
 		}
-		return "(" + val.map(exports.escapeVal.bind(this)).join(", ") + ")";
+		return "(" + val.map(escapeVal.bind(this)).join(", ") + ")";
 	}
 
 	if (util.isDate(val)) {
@@ -59,7 +64,7 @@ exports.escapeVal = function (val, timeZone) {
 		case "boolean":
 			return val ? 1 : 0;
 		case "function":
-			return val(exports);
+			return val(Dialect);
 		case "string":
 			break;
 		default:
@@ -69,6 +74,13 @@ exports.escapeVal = function (val, timeZone) {
 	return "'" + val.replace(/\'/g, "''") + "'";
 };
 
-exports.defaultValuesStmt = "DEFAULT VALUES";
+const Dialect: FxSqlQueryDialect.Dialect = {
+	DataTypes,
+	escape,
+	escapeId,
+	escapeVal,
+	defaultValuesStmt: "DEFAULT VALUES",
+	limitAsTop: true,
+}
 
-exports.limitAsTop = true;
+export = Dialect

@@ -1,6 +1,10 @@
-exports.build = function (Dialect, set, opts) {
+export function build (
+	Dialect: FxSqlQueryDialect.Dialect,
+	set: FxSqlQuerySql.ValuesToSet,
+	opts: FxSqlQuery.ChainBuilderOptions
+): string | string[] {
 	opts = opts || {};
-	
+
 	if (!set || set.length === 0) {
 		return [];
 	}
