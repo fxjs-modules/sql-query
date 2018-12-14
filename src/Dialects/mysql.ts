@@ -1,7 +1,9 @@
-var util    = require("util");
-var helpers = require("../Helpers");
+/// <reference types="fibjs" />
 
-exports.DataTypes = {
+import util    = require("util");
+import helpers = require("../Helpers");
+
+const DataTypes = {
 	id:    'INTEGER PRIMARY KEY AUTO_INCREMENT',
 	int:   'INTEGER',
 	float: 'FLOAT(12,2)',
@@ -9,27 +11,29 @@ exports.DataTypes = {
 	text:  'TEXT'
 };
 
-
-exports.escape = function (query, args) {
-	return helpers.escapeQuery(exports, query, args);
+function escape (
+	query: FxSqlQuerySql.SqlFragmentStr,
+	args: FxSqlQuerySql.SqlAssignmentValues
+) {
+	return helpers.escapeQuery(Dialect, query, args);
 }
 
-exports.escapeId = function () {
-	return Array.prototype.slice.apply(arguments).map(function (el) {
+function escapeId (...els: any[]) {
+	return els.map(function (el) {
 		if (typeof el == "object") {
-			return el.str.replace(/\?:(id|value)/g, function (m) {
+			return el.str.replace(/\?:(id|value)/g, function (m: string) {
 				if (m == "?:id") {
-					return exports.escapeId(el.escapes.shift());
+					return escapeId(el.escapes.shift());
 				}
-				// ?:value
-				return exports.escapeVal(el.escapes.shift());
+
+				return escapeVal(el.escapes.shift());
 			});
 		}
 		return "`" + el.replace(/`/g, '``') + "`";
 	}).join(".");
 };
 
-exports.escapeVal = function (val, timeZone) {
+function escapeVal (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) {
 	if (val === undefined || val === null || typeof val === "symbol") {
 		return 'NULL';
 	}
@@ -57,11 +61,11 @@ exports.escapeVal = function (val, timeZone) {
 			case "object":
 				return objectToValues(val, timeZone || "Z");
 			case "function":
-				return val(exports);
+				return val(Dialect);
 		}
 	}
 
-	val = val.replace(/[\0\n\r\b\t\\\'\"\x1a]/g, function(s) {
+	val = val.replace(/[\0\n\r\b\t\\\'\"\x1a]/g, function(s: string) {
 		switch(s) {
 			case "\0": return "\\0";
 			case "\n": return "\\n";
@@ -76,7 +80,7 @@ exports.escapeVal = function (val, timeZone) {
 	return "'" + val + "'";
 };
 
-function objectToValues(object, timeZone) {
+function objectToValues(object: {[key: string]: any}, timeZone: FxSqlQuery.FxSqlQueryTimezone): string {
 	var values = [];
 	for (var key in object) {
 		var value = object[key];
@@ -85,33 +89,32 @@ function objectToValues(object, timeZone) {
 			continue;
 		}
 
-		values.push(exports.escapeId(key) + ' = ' + exports.escapeVal(value, timeZone));
+		values.push(escapeId(key) + ' = ' + escapeVal(value, timeZone));
 	}
 
 	return values.join(', ');
 }
 
-function arrayToList(array, timeZone) {
+function arrayToList(array: any[], timeZone?: FxSqlQuery.FxSqlQueryTimezone): string {
 	return "(" + array.map(function(v) {
 		if (Array.isArray(v)) return arrayToList(v);
-		return exports.escapeVal(v, timeZone);
+		return escapeVal(v, timeZone);
 	}).join(', ') + ")";
 }
 
-function bufferToString(buffer) {
-	var hex = '';
-
-	try {
-		hex = buffer.toString('hex');
-	} catch (err) {
-		// node v0.4.x does not support hex / throws unknown encoding error
-		for (var i = 0; i < buffer.length; i++) {
-			var b = buffer[i];
-			hex += zeroPad(b.toString(16));
-		}
-	}
+function bufferToString(buffer: Class_Buffer) {
+	var hex = buffer.toString('hex');
 
 	return "X'" + hex+ "'";
 }
 
-exports.defaultValuesStmt = "VALUES()";
+const Dialect: FxSqlQueryDialect.Dialect = {
+	DataTypes,
+	escape,
+	escapeId,
+	escapeVal,
+	defaultValuesStmt: "VALUES()",
+	limitAsTop: false,
+}
+
+export = Dialect

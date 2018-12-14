@@ -1,8 +1,10 @@
-var util    = require("util");
-var helpers = require("../Helpers");
+/// <reference path="../../@types/index.d.ts" />
+
+import util    = require("util");
+import helpers = require("../Helpers");
 
 
-exports.DataTypes = {
+const DataTypes = {
 	isSQLITE: true,
 	id:      'INTEGER PRIMARY KEY AUTOINCREMENT',
 	int:     'INTEGER',
@@ -11,22 +13,25 @@ exports.DataTypes = {
 	text:    'TEXT'
 };
 
-exports.escape = function (query, args) {
-	return helpers.escapeQuery(exports, query, args);
+function escape (
+	query: FxSqlQuerySql.SqlFragmentStr,
+	args: FxSqlQuerySql.SqlAssignmentValues
+) {
+	return helpers.escapeQuery(Dialect, query, args);
 }
 
-exports.escapeId = require("./mysql").escapeId;
+const escapeId = require("./mysql").escapeId;
 
-exports.escapeVal = function (val, timeZone) {
+function escapeVal (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) {
 	if (val === undefined || val === null || typeof val === "symbol") {
 		return 'NULL';
 	}
 
 	if (Array.isArray(val)) {
 		if (val.length === 1 && Array.isArray(val[0])) {
-			return "(" + val[0].map(exports.escapeVal.bind(this)) + ")";
+			return "(" + val[0].map(escapeVal.bind(this)) + ")";
 		}
-		return "(" + val.map(exports.escapeVal.bind(this)).join(", ") + ")";
+		return "(" + val.map(escapeVal.bind(this)).join(", ") + ")";
 	}
 
 	if (util.isDate(val)) {
@@ -47,7 +52,7 @@ exports.escapeVal = function (val, timeZone) {
 		case "boolean":
 			return val ? 1 : 0;
 		case "function":
-			return val(exports);
+			return val(Dialect);
 		case "string":
 			break;
 		default:
@@ -59,4 +64,13 @@ exports.escapeVal = function (val, timeZone) {
 	return "'" + val.replace(/\'/g, "''") + "'";
 };
 
-exports.defaultValuesStmt = "DEFAULT VALUES";
+const Dialect: FxSqlQueryDialect.Dialect = {
+	DataTypes,
+	escape,
+	escapeId,
+	escapeVal,
+	defaultValuesStmt: "DEFAULT VALUES",
+	limitAsTop: false,
+}
+
+export = Dialect

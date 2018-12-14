@@ -1,6 +1,7 @@
 {
 	"version": "0.0.1",
 	"name": "@fxjs/sql-query",
+	"types": "@types/index.d.ts",
 	"author": "Richard <richardo2016@gmail.com>",
 	"description": "Fibjs SQL query builder",
 	"keywords": [
