@@ -15,7 +15,8 @@
 	"scripts": {
 		"build": "fib-typify src -o lib",
 		"test": "fibjs test/run",
-		"ci": "npm run build && npm run test"
+		"ci": "npm run build && npm run test",
+        "prepublishOnly": "npm run build"
 	},
 	"main": "./lib/Query",
 	"engines": {
