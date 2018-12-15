@@ -52,11 +52,15 @@ export class Query implements FxSqlQuery.Class_Query {
 		this.opts = opts
 
 		this.Dialect = require("./Dialects/" + (opts.dialect || "mysql"));
+
+		this.escape = this._proxyFn('escape')
+		this.escapeId = this._proxyFn('escapeId')
+		this.escapeVal = this._proxyFn('escapeVal')
 	}
 
-	escape(...args: any[]) { return this._proxyFn('escape')(...args) }
-	escapeId(...args: any[]) { return this._proxyFn('escapeId')(...args) }
-	escapeVal(...args: any[]) { return this._proxyFn('escapeVal')(...args) }
+	escape: FxSqlQueryDialect.fn_escape
+	escapeId: FxSqlQueryDialect.fn_escapeId
+	escapeVal: FxSqlQueryDialect.fn_escapeVal
 
 	create()　{
 		return new CreateQuery(this.Dialect);
