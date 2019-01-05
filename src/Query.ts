@@ -58,9 +58,9 @@ export class Query implements FxSqlQuery.Class_Query {
 		this.escapeVal = this._proxyFn('escapeVal')
 	}
 
-	escape: FxSqlQueryDialect.fn_escape
-	escapeId: FxSqlQueryDialect.fn_escapeId
-	escapeVal: FxSqlQueryDialect.fn_escapeVal
+	escape: FxSqlQuery.Class_Query['escape']
+	escapeId: FxSqlQuery.Class_Query['escapeId']
+	escapeVal: FxSqlQuery.Class_Query['escapeVal']
 
 	create()　{
 		return new CreateQuery(this.Dialect);

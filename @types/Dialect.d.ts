@@ -17,29 +17,27 @@ declare namespace FxSqlQueryDialect {
 		isSQLITE?: boolean
 	}
 
-	interface fn_escape {
-		(
-			query: FxSqlQuerySql.SqlFragmentStr,
-			args: FxSqlQuerySql.SqlAssignmentValues
-		): string
-	}
-
-	interface fn_escapeId {
-		(...els: FxSqlQuerySql.SqlEscapeArgIdType[]): string
-	}
-
-	interface fn_escapeVal {
-		(val: FxSqlQuerySql.SqlEscapeArgType, timezone?: FxSqlQuery.FxSqlQueryTimezone): string
-	}
-
 	interface Dialect {
 		DataTypes: DataTypesDescriptor
 
-		escape: fn_escape
-		escapeId: fn_escapeId
-		escapeVal: fn_escapeVal
+		escape: {
+			(
+				query: FxSqlQuerySql.SqlFragmentStr,
+				args: FxSqlQuerySql.SqlAssignmentValues
+			): string
+		}
+		escapeId: {
+			(...els: FxSqlQuerySql.SqlEscapeArgIdType[]): string
+		}
+		escapeVal: {
+			(val: FxSqlQuerySql.SqlEscapeArgType, timezone?: FxSqlQuery.FxSqlQueryTimezone): string
+		}
 
 		defaultValuesStmt: string
 		limitAsTop: boolean
 	}
+
+	type fn_escape = Dialect['escape']
+	type fn_escapeId = Dialect['escapeId']
+	type fn_escapeVal = Dialect['escapeVal']
 }
