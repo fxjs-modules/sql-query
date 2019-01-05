@@ -27,6 +27,8 @@ declare namespace FxSqlQuery {
 	}
 
 	interface Class_Query {
+		new (opts?: QueryOptions): Class_Query
+
 		escape: FxSqlQueryDialect.Dialect['escape']
 		escapeId: FxSqlQueryDialect.Dialect['escapeId']
 		escapeVal: FxSqlQueryDialect.Dialect['escapeVal']
