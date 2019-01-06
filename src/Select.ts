@@ -110,9 +110,9 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	}
 	from (
 		table: string,
-		from_id: FxSqlQueryHelpler.Arraiable<string>,
-		to_table: string,
-		to_id: FxSqlQueryHelpler.Arraiable<string>,
+		from_id?: FxSqlQueryHelpler.Arraiable<string>,
+		to_table?: string,
+		to_id?: FxSqlQueryHelpler.Arraiable<string>,
 		fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
 	): this {
 		var from: FxSqlQuerySql.QueryFromDescriptor = {

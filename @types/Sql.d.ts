@@ -1,4 +1,5 @@
 declare namespace FxSqlQuerySql {
+	type ValueToSet = (string|number)
 	type ValuesToSet = (string|number)[]
 
 	type SqlResultStr = string

@@ -16,7 +16,7 @@ declare namespace FxSqlQuery {
 
 	interface ChainBuilderPaginationMixin {
 		offset(offset: number): this
-		limit(limit: number): this
+		limit(limit: number|string): this
 	}
 
 	interface ChainBuilderSortMixin {
@@ -34,9 +34,9 @@ declare namespace FxSqlQuery {
 		groupBy: (...args: FxSqlQuerySql.SqlGroupByType[]) => this
 		from: (
 			table: string,
-			from_id: FxSqlQueryHelpler.Arraiable<string>,
-			to_table: string,
-			to_id: FxSqlQueryHelpler.Arraiable<string>,
+			from_id?: FxSqlQueryHelpler.Arraiable<string>,
+			to_table?: string,
+			to_id?: FxSqlQueryHelpler.Arraiable<string>,
 			fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
 		) => this
 
