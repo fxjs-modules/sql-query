@@ -1,6 +1,6 @@
 export function build (
 	Dialect: FxSqlQueryDialect.Dialect,
-	set: FxSqlQuerySql.ValuesToSet,
+	set: FxSqlQuerySql.DataToSet,
 	opts: FxSqlQuery.ChainBuilderOptions
 ): string | string[] {
 	opts = opts || {};

@@ -9,7 +9,7 @@ export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 		this.sql.table = table;
 		return this;
 	}
-	set (values: FxSqlQuerySql.ValuesToSet) {
+	set (values: FxSqlQuerySql.DataToSet) {
 		this.sql.set = values;
 		return this;
 	}

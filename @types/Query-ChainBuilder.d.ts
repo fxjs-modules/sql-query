@@ -28,7 +28,7 @@ declare namespace FxSqlQuery {
 	interface ChainBuilder__Select
 		extends ChainBuilder, FxSqlQuery.SupportedAggregationsMixin, ChainBuilderPaginationMixin, ChainBuilderSortMixin
 	{
-		select: (fields: FxSqlQueryColumns.FieldItemHash) => this
+		select: (fields: FxSqlQueryColumns.FieldItemHash|FxSqlQueryColumns.FieldItemHash[]) => this
 		where: (...whereConditions: FxSqlQuerySql.QueryWhereConditionHash[]) => this
 		whereExists: (table: string, table_link: string, link: string, cond: FxSqlQuerySql.QueryWhereConditionHash) => this
 		groupBy: (...args: FxSqlQuerySql.SqlGroupByType[]) => this
@@ -44,7 +44,7 @@ declare namespace FxSqlQuery {
 	}
 	interface ChainBuilder__Insert extends ChainBuilder {
 		into(table: string): this | ChainBuilder__Insert
-		set(values: FxSqlQuerySql.ValuesToSet): this | ChainBuilder__Insert
+		set(values: FxSqlQuerySql.DataToSet): this | ChainBuilder__Insert
 	}
 
 	interface ChainBuilder__Create extends ChainBuilder {
@@ -60,7 +60,7 @@ declare namespace FxSqlQuery {
 	interface ChainBuilder__Update extends ChainBuilder {
 		where: (...whereConditions: FxSqlQuerySql.QueryWhereConditionHash[]) => ChainBuilder__Update
 		into(table: string): this | ChainBuilder__Update
-		set(values: FxSqlQuerySql.ValuesToSet): this | ChainBuilder__Update
+		set(values: FxSqlQuerySql.DataToSet): this | ChainBuilder__Update
 	}
 
 	interface ChainBuilder__Remove

@@ -36,7 +36,7 @@ export class Query implements FxSqlQuery.Class_Query {
 		return this._fns[fn_name]
 	}
 
-	constructor(_opts: string | FxSqlQuery.QueryOptions) {
+	constructor (_opts?: string | FxSqlQuery.QueryOptions) {
 		let dialect: FxSqlQueryDialect.DialectType
 		let opts: FxSqlQuery.QueryOptions = null
 		if (typeof _opts == "string") {
