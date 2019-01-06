@@ -14,7 +14,7 @@ export class UpdateQuery implements FxSqlQuery.ChainBuilder__Update {
 		this.sql.table = table;
 		return this;
 	}
-	set (values: FxSqlQuerySql.ValuesToSet) {
+	set (values: FxSqlQuerySql.DataToSet) {
 		this.sql.set = values;
 		return this;
 	}

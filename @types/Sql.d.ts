@@ -1,6 +1,8 @@
 declare namespace FxSqlQuerySql {
-	type ValueToSet = (string|number)
-	type ValuesToSet = (string|number)[]
+	// type ValueToSet = (string|number)
+	type DataToSet = {
+		[key: string]: any
+	}
 
 	type SqlResultStr = string
 	type SqlFragmentStr = string
@@ -134,7 +136,7 @@ declare namespace FxSqlQuerySql {
 		from?: QueryFromDescriptor[]
 		table?: string
 		// values to set in UPDATE like command
-		set?: ValuesToSet
+		set?: DataToSet
 		where?: SqlQueryDescriptorWhereItem[]
 		order?: SqlOrderPayloadType[]
 		offset?: number
