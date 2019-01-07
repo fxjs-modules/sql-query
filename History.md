@@ -1,7 +1,16 @@
 
-v0.0.3 / 2019-01-05
+v0.1.0 / 2019-01-08
 ==================
 
+  * build next version typo.
+  * typo fix.
+  * update typo.
+  * typo fix.
+
+v0.0.3 / 2019-01-05
+===================
+
+  * Release v0.0.3
   * update typo.
   * update .npmignore.
 
