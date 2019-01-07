@@ -27,7 +27,7 @@ declare namespace FxSqlQueryDialect {
 			): string
 		}
 		escapeId: {
-			(...els: FxSqlQuerySql.SqlEscapeArgIdType[]): string
+			(...els: (FxSqlQuerySql.SqlEscapeArgIdType | {str: string, escapes: string[]})[]): string
 		}
 		escapeVal: {
 			(val: FxSqlQuerySql.SqlEscapeArgType, timezone?: FxSqlQuery.FxSqlQueryTimezone): string

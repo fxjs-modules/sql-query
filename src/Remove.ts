@@ -13,7 +13,7 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		this.sql.table = table;
 		return this;
 	}
-	where (...whereConditions: FxSqlQuerySql.QueryWhereConditionHash[]) {
+	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) {
 		for (var i = 0; i < whereConditions.length; i++) {
 			this.sql.where.push({
 				t: null,
@@ -33,7 +33,7 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		}
 		query.push(this.Dialect.escapeId(this.sql.table));
 
-		query = query.concat(Where.build(this.Dialect, this.sql.where as FxSqlQuerySql.SqlWhereDescriptor[], this.opts));
+		query = query.concat(Where.build(this.Dialect, this.sql.where as FxSqlQuerySubQuery.SubQueryBuildDescriptor[], this.opts));
 
 		// order
 		if (this.sql.order.length > 0) {

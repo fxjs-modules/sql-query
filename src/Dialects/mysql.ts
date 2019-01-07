@@ -18,7 +18,7 @@ function escape (
 	return helpers.escapeQuery(Dialect, query, args);
 }
 
-function escapeId (...els: any[]) {
+function escapeId (...els: (string | {str: string, escapes: string[]})[]): string {
 	return els.map(function (el) {
 		if (typeof el == "object") {
 			return el.str.replace(/\?:(id|value)/g, function (m: string) {

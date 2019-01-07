@@ -4,7 +4,7 @@ import Helpers = require('./Helpers');
 
 export function build (
 	Dialect: FxSqlQueryDialect.Dialect,
-	whereList: FxSqlQuerySql.SqlWhereDescriptor[],
+	whereList: FxSqlQuerySubQuery.SubQueryBuildDescriptor[],
 	opts: FxSqlQuery.ChainBuilderOptions
 ): string | string[] {
 	if (whereList.length === 0) {
@@ -31,9 +31,11 @@ export function build (
 	return "WHERE (" + query.join(") AND (") + ")";
 };
 
+const where_conjunctions = [ "or", "and", "not_or", "not_and", "not" ];
+
 function buildOrGroup(
 	Dialect: FxSqlQueryDialect.Dialect,
-	where: FxSqlQuerySql.SqlWhereDescriptor,
+	where: FxSqlQuerySubQuery.SubQueryBuildDescriptor,
 	opts: FxSqlQuery.ChainBuilderOptions
 ): FxSqlQuerySql.SqlFragmentStr[] | FxSqlQuerySql.SqlResultStr | false {
 	opts = opts || {};
@@ -65,7 +67,7 @@ function buildOrGroup(
 	}
 
 	var query = [],
-		op: FxSqlQuery.QueryComparatorType;
+		op: FxSqlQueryComparator.QueryComparatorType;
 
 	for (var k in where.w) {
 		if (where.w[k] === null || where.w[k] === undefined) {
@@ -75,16 +77,21 @@ function buildOrGroup(
 			);
 			continue;
 		}
-		// not is an alias for not_and
-		if ([ "or", "and", "not_or", "not_and", "not" ].indexOf(k) >= 0) {
+		// `not` is an alias for `not_and`
+		if (where_conjunctions.indexOf(k) >= 0) {
 			var q, subquery = [];
 			var prefix = (k == "not" || k.indexOf("_") >= 0 ? "NOT " : false);
 
 			op = (k == "not" ? "and" : (k.indexOf("_") >= 0 ? k.substr(4) : k)).toUpperCase();
 
-			const special_kv = where.w[k] as FxSqlQuerySql.ListOfQueryWhereConditionItemHash
-			for (var j = 0; j < special_kv.length; j++) {
-				q = buildOrGroup(Dialect, { t: where.t, w: special_kv[j] }, opts);
+			const conj_cond_item = where.w[k] as FxSqlQueryComparator.SubQuerySimpleEqInput[]
+			for (var j = 0; j < conj_cond_item.length; j++) {
+				const conj_c = conj_cond_item[j]
+				q = buildOrGroup(
+					Dialect,
+					{ t: where.t, w: conj_c },
+					opts
+				);
 				if (q !== false) {
 					subquery.push(q);
 				}
@@ -95,43 +102,49 @@ function buildOrGroup(
 			}
 			continue;
 		}
-		
-		const non_special_kv = where.w[k] as FxSqlQuerySql.QueryWhereCondition
 
-		if (typeof non_special_kv.sql_comparator == "function") {
-			op = non_special_kv.sql_comparator();
+		const non_special_kv = where.w[k] as FxSqlQuerySubQuery.NonConjunctionInputValue
+
+		if (
+			/* non_special_kv could be string, it's international */
+			typeof (non_special_kv as FxSqlQuerySql.DetailedQueryWhereCondition).sql_comparator == "function"
+		) {
+			const query_comparator_obj = non_special_kv as FxSqlQuerySql.DetailedQueryWhereCondition
+
+			op = query_comparator_obj.sql_comparator();
+			const normalized_cond = query_comparator_obj as FxSqlQuerySql.DetailedQueryWhereCondition
 
 			switch (op) {
 				case "between":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" BETWEEN " +
-						Dialect.escapeVal(non_special_kv.from, opts.timezone) +
+						Dialect.escapeVal(normalized_cond.from, opts.timezone) +
 						" AND " +
-						Dialect.escapeVal(non_special_kv.to, opts.timezone)
+						Dialect.escapeVal(normalized_cond.to, opts.timezone)
 					);
 					break;
 				case "not_between":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" NOT BETWEEN " +
-						Dialect.escapeVal(non_special_kv.from, opts.timezone) +
+						Dialect.escapeVal(normalized_cond.from, opts.timezone) +
 						" AND " +
-						Dialect.escapeVal(non_special_kv.to, opts.timezone)
+						Dialect.escapeVal(normalized_cond.to, opts.timezone)
 					);
 					break;
 				case "like":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" LIKE " +
-						Dialect.escapeVal(non_special_kv.expr, opts.timezone)
+						Dialect.escapeVal(normalized_cond.expr, opts.timezone)
 					);
 					break;
 				case "not_like":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" NOT LIKE " +
-						Dialect.escapeVal(non_special_kv.expr, opts.timezone)
+						Dialect.escapeVal(normalized_cond.expr, opts.timezone)
 					);
 					break;
 				case "eq":
@@ -142,8 +155,8 @@ function buildOrGroup(
 				case "lte":
 				case "not_in":
 					switch (op) {
-						case "eq"  : op = (non_special_kv.val === null ? "IS" : "="); break;
-						case "ne"  : op = (non_special_kv.val === null ? "IS NOT" : "<>"); break;
+						case "eq"  : op = (normalized_cond.val === null ? "IS" : "="); break;
+						case "ne"  : op = (normalized_cond.val === null ? "IS NOT" : "<>"); break;
 						case "gt"  : op = ">";  break;
 						case "gte" : op = ">="; break;
 						case "lt"  : op = "<";  break;
@@ -153,23 +166,23 @@ function buildOrGroup(
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" " + op + " " +
-						Dialect.escapeVal(non_special_kv.val, opts.timezone)
+						Dialect.escapeVal(normalized_cond.val, opts.timezone)
 					);
 					break;
 				case "sql":
-					if (typeof non_special_kv.where == "object") {
-						var sql = non_special_kv.where.str.replace("?:column", buildComparisonKey(Dialect, where.t, k));
+					if (typeof normalized_cond.where == "object") {
+						var sql = normalized_cond.where.str.replace("?:column", buildComparisonKey(Dialect, where.t, k));
 
 						sql = sql.replace(/\?:(id|value)/g, function (m) {
-							if (non_special_kv.where.escapes.length === 0) {
+							if (normalized_cond.where.escapes.length === 0) {
 								return '';
 							}
 
 							if (m == "?:id") {
-								return Dialect.escapeId(non_special_kv.where.escapes.shift());
+								return Dialect.escapeId(normalized_cond.where.escapes.shift());
 							}
 							// ?:value
-							return Dialect.escapeVal(non_special_kv.where.escapes.shift(), opts.timezone);
+							return Dialect.escapeVal(normalized_cond.where.escapes.shift(), opts.timezone);
 						});
 
 						query.push(sql);
@@ -180,8 +193,8 @@ function buildOrGroup(
 		}
 
 		if (k == '__sql') {
-			const puresql_kv: FxSqlQuerySql.SqlAssignmentTuple[] = where.w[k] as FxSqlQuerySql.SqlAssignmentTuple[]
-			for (var a = 0; a < where.w[k].length; a++) {
+			const puresql_kv = where.w[k] as FxSqlQuerySubQuery.UnderscoreSqlInput
+			for (var a = 0; a < puresql_kv.length; a++) {
 				query.push(normalizeSqlConditions(Dialect, puresql_kv[a]));
 			}
 		} else {
