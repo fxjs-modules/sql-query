@@ -84,7 +84,7 @@ function buildOrGroup(
 
 			op = (k == "not" ? "and" : (k.indexOf("_") >= 0 ? k.substr(4) : k)).toUpperCase();
 
-			const conj_cond_item = where.w[k] as FxSqlQueryComparator.SubQuerySimpleEqInput[]
+			const conj_cond_item = where.w[k] as FxSqlQueryComparator.SubQueryInput[]
 			for (var j = 0; j < conj_cond_item.length; j++) {
 				const conj_c = conj_cond_item[j]
 				q = buildOrGroup(

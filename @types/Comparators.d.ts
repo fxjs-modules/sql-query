@@ -32,9 +32,20 @@ declare namespace FxSqlQueryComparator {
 
 	type InputValueType =
 		SimpleEqValueType | InputComparatorObjectValue
+
+	interface SubQueryComparatorInput {
+		[k: string]: FxSqlQueryComparator.QueryComparatorObject
+	}
+
+	// compatible
 	interface SubQuerySimpleEqInput {
 		[k: string]: SimpleEqValueType
 	}
+
+	interface SubQueryInput {
+		[k: string]: FxSqlQueryComparator.QueryComparatorObject | SimpleEqValueType
+	}
+
 	interface Input {
 		[key: string]: InputValueType
 	}
