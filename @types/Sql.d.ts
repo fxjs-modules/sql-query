@@ -1,3 +1,5 @@
+/// <reference path="Comparators.d.ts" />
+
 declare namespace FxSqlQuerySql {
 	// type ValueToSet = (string|number)
 	type DataToSet = {
@@ -18,41 +20,30 @@ declare namespace FxSqlQuerySql {
 		str: string
 		escapes: any[]
 	}
-	type WherePureEscapableSqlTuple = [SqlAssignmentTuple]
 
-	interface QueryWhereCondition {
-		sql_comparator: {
-			(): FxSqlQuery.QueryComparatorType
-		}
+	// ['f1', 'f2'] ---> (`t1.f1` = `t2.f2`)
+	type WhereExistsLinkTuple_L1 = FxSqlQueryHelpler.BinaryTuple<string>
+	// [['f1', 'f2'], ['ff1', 'ff2']] ---> (`t1.f1` = `t2.f2`) AND (`t1.ff1` = `t2.ff2`)
+	type WhereExistsLinkTuple_L2 = FxSqlQueryHelpler.BinaryTuple<FxSqlQueryHelpler.BinaryTuple<string>>
+	type WhereExistsLinkTuple = WhereExistsLinkTuple_L1 | WhereExistsLinkTuple_L2
+
+	interface DetailedQueryWhereCondition extends FxSqlQueryComparator.QueryComparatorObject {
 		// from table name
 		from: string
 		// target table name
 		to: string
-		expr: FxSqlQuery.QueryComparatorExprType
+		expr: FxSqlQueryComparator.QueryComparatorExprType
 		val: any
 		where: WhereObj
 	}
 
-	type ListOfQueryWhereConditionItemHash = QueryWhereConditionHash[]
-	type NonSpecialQueryWhereConditionItem = QueryWhereCondition | WherePureEscapableSqlTuple
-	interface NonSpecialQueryWhereConditionItemHash {
-		[k: string]: NonSpecialQueryWhereConditionItem
+	interface QueryWhereConjunctionHash {
+		or?: FxSqlQueryComparator.Input[]
+		and?: FxSqlQueryComparator.Input[]
+		not_or?: FxSqlQueryComparator.Input[]
+		not_and?: FxSqlQueryComparator.Input[]
+		not?: FxSqlQueryComparator.Input[]
 	}
-	
-	type ComplextQueryWhereConditionUnit = ListOfQueryWhereConditionItemHash | NonSpecialQueryWhereConditionItem
-	interface QueryWhereConditionHash {
-		// infact, those [k] must be `NonSpecialQueryWhereConditionItem`, such as part of NonSpecialQueryWhereConditionItemHash
-		[k: string]: ComplextQueryWhereConditionUnit
-
-		or: ListOfQueryWhereConditionItemHash
-		and: ListOfQueryWhereConditionItemHash
-		not_or: ListOfQueryWhereConditionItemHash
-		not_and: ListOfQueryWhereConditionItemHash
-		not: ListOfQueryWhereConditionItemHash
-		__sql: WherePureEscapableSqlTuple
-	}
-
-	type QueryWhereConditionInputArg = QueryWhereConditionHash | string
 
 	interface QueryWhereExtendItem {
 		// table
@@ -70,15 +61,18 @@ declare namespace FxSqlQuerySql {
 		}
 	}
 
-	type SqlColumnType = SqlColumnDescriptor[] | string[] | string | '*'
+	type NormalizedSimpleSqlColumnType = string | '*'
+	type SqlColumnType = SqlColumnDescriptor[] | string[] | NormalizedSimpleSqlColumnType
 
 	interface SqlSelectFieldsDescriptor {
 		// fun name
 		f?: string
 		// column name
-		c: SqlColumnType
+		c?: SqlColumnType
 		// table alias
-		a?: string
+		alias?: string
+		// args to describe what columns to select
+		a?: FxSqlQuerySql.SqlColumnType
 		// fun_stack
 		s?: FxSqlQuery.SupportedAggregationFunction[]
 		// pure sql
@@ -89,7 +83,7 @@ declare namespace FxSqlQuerySql {
 	}
 
 	interface SqlSelectFieldsGenerator {
-		(dialect: FxSqlQueryDialect.Dialect): SqlSelectFieldsDescriptor
+		(dialect: FxSqlQueryDialect.Dialect): string
 	}
 	type SqlSelectFieldsType = SqlSelectFieldsDescriptor | SqlSelectFieldsGenerator
 
@@ -110,15 +104,6 @@ declare namespace FxSqlQuerySql {
 		opts?: QueryFromDescriptorOpts
 	}
 
-	interface SqlWhereDescriptor {
-		// table name
-		t: string
-		// where conditions
-		w: QueryWhereConditionHash
-		// exists query info
-		e?: QueryWhereExtendItem
-	}
-
 	interface SqlOrderDescriptor {
 		c: any
 		d: any
@@ -130,14 +115,14 @@ declare namespace FxSqlQuerySql {
 	interface SqlFoundRowItem {
 	}
 
-	type SqlQueryDescriptorWhereItem = SqlWhereDescriptor | string
+	// type SqlQueryDescriptorWhereItem = SqlWhereDescriptor | string
 
 	interface SqlQueryChainDescriptor {
 		from?: QueryFromDescriptor[]
 		table?: string
 		// values to set in UPDATE like command
 		set?: DataToSet
-		where?: SqlQueryDescriptorWhereItem[]
+		where?: FxSqlQuerySubQuery.SubQueryBuildDescriptor[]
 		order?: SqlOrderPayloadType[]
 		offset?: number
 		limit?: number

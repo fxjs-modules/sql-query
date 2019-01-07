@@ -9,12 +9,12 @@ export function not_between (a: string, b: string) {
 };
 
 type like = FxSqlQueryComparatorFunction.like
-export function like (expr: FxSqlQuery.QueryComparatorExprType) {
+export function like (expr: FxSqlQueryComparator.QueryComparatorExprType) {
 	return createSpecialObject({ expr: expr }, 'like');
 };
 
 type not_like = FxSqlQueryComparatorFunction.not_like
-export function not_like (expr: FxSqlQuery.QueryComparatorExprType) {
+export function not_like (expr: FxSqlQueryComparator.QueryComparatorExprType) {
 	return createSpecialObject({ expr: expr }, 'not_like');
 };
 
@@ -55,14 +55,14 @@ export function not_in (v: any) {
 };
 
 function createSpecialObject(
-	obj: FxSqlQuery.QueryComparatorObject,
-	tag: FxSqlQuery.QueryComparatorType
-): FxSqlQuery.QueryComparatorObject {
+	obj: object,
+	tag: FxSqlQueryComparator.QueryComparatorType
+): FxSqlQueryComparator.QueryComparatorObject {
 	Object.defineProperty(obj, "sql_comparator", {
 		configurable : false,
 		enumerable   : false,
 		value        : function () { return tag; }
 	});
 
-	return obj;
+	return obj as FxSqlQueryComparator.QueryComparatorObject;
 }

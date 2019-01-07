@@ -1,4 +1,5 @@
 /// <reference path="Dialect.d.ts" />
+/// <reference path="SubQuery.d.ts" />
 /// <reference path="Query-ChainBuilder.d.ts" />
 
 declare namespace FxSqlQuery {

@@ -161,21 +161,38 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		this.sql.from.push(from);
 		return this;
 	}
-	where (...whereConditions: FxSqlQuerySql.QueryWhereConditionInputArg[]): this {
-		var whereItem: FxSqlQuerySql.SqlQueryDescriptorWhereItem = null;
+	where (
+		...whereConditions: (
+			FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'] | FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0]
+		)[]
+	): this {
+		var whereItem: FxSqlQuerySubQuery.SubQueryBuildDescriptor = null;
 
 		for (var i = 0; i < whereConditions.length; i++) {
 			if (whereConditions[i] === null) {
 				continue;
 			}
 			if (typeof whereConditions[i] == "string") {
-				const cond_str = whereConditions[i] as string
+				/**
+				 * deal with input like this:
+				 * [
+						"table1",
+						{
+							"col": 1
+						},
+						"table2",
+						{
+							"col": 2
+						}
+					]
+				 */
+				const cond_str = whereConditions[i] as FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0]
 				if (whereItem !== null) {
 					this.sql.where.push(whereItem);
 				}
 				whereItem = {
 					t: get_table_alias(this.sql, cond_str),
-					w: whereConditions[i + 1] as FxSqlQuerySql.QueryWhereConditionHash
+					w: whereConditions[i + 1] as FxSqlQuerySubQuery.WhereExistsTuple_Flatten[1]
 				};
 				i++;
 			} else {
@@ -184,7 +201,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 				}
 				whereItem = {
 					t: null,
-					w: whereConditions[i] as FxSqlQuerySql.QueryWhereConditionHash
+					w: whereConditions[i] as FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']
 				};
 			}
 		}
@@ -193,7 +210,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		}
 		return this;
 	}
-	whereExists (table: string, table_link: string, link: string, cond: FxSqlQuerySql.QueryWhereConditionHash) {
+	whereExists (table: string, table_link: string, link: FxSqlQuerySql.WhereExistsLinkTuple, cond: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']) {
 		this.sql.where.push({
 			t: (this.sql.from.length ? this.sql.from[this.sql.from.length - 1].a : null),
 			w: cond,
@@ -228,7 +245,11 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		return this;
 	}
 	build () {
-		var query = [], tmp = [], from, j, ord, str;
+		var query: string[] = [],
+			tmp: string[] = [],
+			_from,
+			ord,
+			str;
 		var having = [];
 
 		if (this.fun_stack.length) {
@@ -241,7 +262,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		if (this.Dialect.limitAsTop && this.sql.hasOwnProperty("limit")) {
 			query.push("TOP " + this.sql.limit);
 		}
-		
+
 		for (let i = 0; i < this.sql.from.length; i++) {
 			this.sql.from[i].a = "t" + (i + 1);
 		}
@@ -255,7 +276,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			for (let j = 0; j < sql_from[i].select.length; j++) {
 				if (typeof sql_select[j] == "string" ) {
 					const sql_select_string = sql_select[j] as string
-					
+
 					if (sql_from.length == 1) {
 						tmp.push(this.Dialect.escapeId(sql_select_string));
 					} else {
@@ -277,7 +298,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 							);
 						}
 						if (sql_select_obj.a) {
-							tmp[tmp.length - 1] += " AS " + this.Dialect.escapeId(sql_select_obj.a);
+							tmp[tmp.length - 1] += " AS " + this.Dialect.escapeId(sql_select_obj.a as FxSqlQuerySql.NormalizedSimpleSqlColumnType);
 						}
 					}
 					if (sql_select_obj.having) {
@@ -338,7 +359,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 					continue;
 				}
 
-				str += (sql_select_obj.a ? " AS " + this.Dialect.escapeId(sql_select_obj.a) : "");
+				str += (sql_select_obj.a ? " AS " + this.Dialect.escapeId(sql_select_obj.a as FxSqlQuerySql.NormalizedSimpleSqlColumnType) : "");
 
 				if (sql_select_obj.s && sql_select_obj.s.length > 0) {
 					str = sql_select_obj.s.join("(") + "(" + str +
@@ -368,30 +389,30 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			}
 
 			for (let i = 0; i < sql_from.length; i++) {
-				from = sql_from[i];
+				_from = sql_from[i];
 
 				if (i > 0) {
-					if (from.opts && from.opts.joinType) {
-						query.push(from.opts.joinType.toUpperCase());
+					if (_from.opts && _from.opts.joinType) {
+						query.push(_from.opts.joinType.toUpperCase());
 					}
 					query.push("JOIN");
 				}
 				if (sql_from.length == 1 && !this.sql.where_exists) {
-					query.push(this.Dialect.escapeId(from.t));
+					query.push(this.Dialect.escapeId(_from.t));
 				} else {
-					query.push(this.Dialect.escapeId(from.t) + " " + this.Dialect.escapeId(from.a));
+					query.push(this.Dialect.escapeId(_from.t) + " " + this.Dialect.escapeId(_from.a));
 				}
 				if (i > 0) {
 					query.push("ON");
 
-					for (let ii = 0; ii < from.j.length; ii++) {
+					for (let ii = 0; ii < _from.j.length; ii++) {
 						if (ii > 0) {
 							query.push("AND");
 						}
 						query.push(
-							this.Dialect.escapeId(from.a, from.j[ii][0]) +
+							this.Dialect.escapeId(_from.a, _from.j[ii][0]) +
 							" = " +
-							this.Dialect.escapeId(from.j[ii][1], from.j[ii][2])
+							this.Dialect.escapeId(_from.j[ii][1], _from.j[ii][2])
 						);
 					}
 
@@ -411,12 +432,12 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		query = query.concat(
 			Where.build(
 				this.Dialect,
-				// at this time, this.sql.where has been normalized, it must be `FxSqlQuerySql.SqlWhereDescriptor[]`
-				this.sql.where as FxSqlQuerySql.SqlWhereDescriptor[],
+				// at this time, this.sql.where has been normalized, it must be `FxSqlQuerySubQuery.SubQueryBuildDescriptor[]`
+				this.sql.where,
 				this.opts
 			)
 		);
- 
+
 		if (this.sql.group_by !== null) {
 			query.push("GROUP BY " + this.sql.group_by.map((column) => {
 				if (column[0] == "-") {

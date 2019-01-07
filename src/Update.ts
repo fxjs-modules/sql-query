@@ -1,7 +1,7 @@
 /// <reference path="../@types/index.d.ts" />
 
-var Set   = require("./Set");
-var Where = require("./Where");
+import UpdateSet   	= require("./Set");
+import Where 		= require("./Where");
 
 export class UpdateQuery implements FxSqlQuery.ChainBuilder__Update {
 	private sql: FxSqlQuerySql.SqlQueryChainDescriptor = {
@@ -18,7 +18,7 @@ export class UpdateQuery implements FxSqlQuery.ChainBuilder__Update {
 		this.sql.set = values;
 		return this;
 	}
-	where (...whereConditions: FxSqlQuerySql.QueryWhereConditionHash[]) {
+	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) {
 		for (var i = 0; i < whereConditions.length; i++) {
 			this.sql.where.push({
 				t: null,
@@ -33,7 +33,7 @@ export class UpdateQuery implements FxSqlQuery.ChainBuilder__Update {
 		query.push("UPDATE");
 		query.push(this.Dialect.escapeId(this.sql.table));
 
-		query = query.concat(Set.build(this.Dialect, this.sql.set, this.opts));
+		query = query.concat(UpdateSet.build(this.Dialect, this.sql.set, this.opts));
 		query = query.concat(Where.build(this.Dialect, this.sql.where, this.opts));
 
 		return query.join(" ");

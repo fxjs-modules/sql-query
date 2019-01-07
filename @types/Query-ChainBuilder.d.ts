@@ -5,8 +5,7 @@
 /// <reference path="Field.d.ts" />
 
 declare namespace FxSqlQuery {
-
-	type QueryWhereConditionPayloadUnit = FxSqlQuerySql.QueryWhereCondition | string | null
+	type QueryWhereConditionPayloadUnit = FxSqlQuerySql.DetailedQueryWhereCondition | string | null
 
 	interface ChainBuilderOptions extends QueryOptions {}
 
@@ -28,16 +27,28 @@ declare namespace FxSqlQuery {
 	interface ChainBuilder__Select
 		extends ChainBuilder, FxSqlQuery.SupportedAggregationsMixin, ChainBuilderPaginationMixin, ChainBuilderSortMixin
 	{
-		select: (fields: FxSqlQueryColumns.FieldItemHash|FxSqlQueryColumns.FieldItemHash[]) => this
-		where: (...whereConditions: FxSqlQuerySql.QueryWhereConditionHash[]) => this
-		whereExists: (table: string, table_link: string, link: string, cond: FxSqlQuerySql.QueryWhereConditionHash) => this
+		select: (fields: FxSqlQueryColumns.SelectInputArgType[]) => this
+		/**
+		 * .where('table1', {t1_col1: 'v1'}, 'table2', {t1_col2: 'v2'}, ...)
+		 * .where({__sql: 'xxx'})
+		 * .where({col1: 'v1', col1: 'v1'})
+		 * .where(not: [ { col: 2 }, { col: 3 } ])
+		 */
+		where: (...whereConditions: (FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'] | FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0])[]) => this
+		whereExists: (
+			table: string,
+			table_link: string,
+			link: FxSqlQuerySql.WhereExistsLinkTuple,
+			cond: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']
+		) => this
 		groupBy: (...args: FxSqlQuerySql.SqlGroupByType[]) => this
+		fun: (fun: string, column?: FxSqlQuerySql.SqlColumnType, alias?: string) => this
 		from: (
 			table: string,
 			from_id?: FxSqlQueryHelpler.Arraiable<string>,
 			to_table?: string,
 			to_id?: FxSqlQueryHelpler.Arraiable<string>,
-			fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
+			from_opts?: FxSqlQuerySql.QueryFromDescriptorOpts
 		) => this
 
 		[extra: string]: any
@@ -52,13 +63,13 @@ declare namespace FxSqlQuery {
 		field(table: string, type: FxSqlQueryDialect.DialectFieldType): this | ChainBuilder__Create
 
 		fields: {
-			(): FxSqlQueryColumns.FieldItemHash
-			(fields: FxSqlQueryColumns.FieldItemHash): ChainBuilder__Create
+			(): FxSqlQueryColumns.FieldItemTypeMap
+			(fields: FxSqlQueryColumns.FieldItemTypeMap): ChainBuilder__Create
 		}
 	}
 
 	interface ChainBuilder__Update extends ChainBuilder {
-		where: (...whereConditions: FxSqlQuerySql.QueryWhereConditionHash[]) => ChainBuilder__Update
+		where: (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) => ChainBuilder__Update
 		into(table: string): this | ChainBuilder__Update
 		set(values: FxSqlQuerySql.DataToSet): this | ChainBuilder__Update
 	}
@@ -67,7 +78,7 @@ declare namespace FxSqlQuery {
 		extends ChainBuilder, ChainBuilderPaginationMixin
 	{
 		order(column: string, dir: QueryOrderDirection): this
-		where: (...whereConditions: FxSqlQuerySql.QueryWhereConditionHash[]) => this
+		where: (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) => this
 		from(table: string): this
 	}
 }
