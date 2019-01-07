@@ -1,7 +1,13 @@
 
-v0.1.0 / 2019-01-08
+v0.1.1 / 2019-01-08
 ==================
 
+  * add typo `SubQueryInput`.
+
+v0.1.0 / 2019-01-08
+===================
+
+  * Release v0.1.0
   * build next version typo.
   * typo fix.
   * update typo.
