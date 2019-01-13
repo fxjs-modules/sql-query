@@ -1,7 +1,15 @@
 
-v0.1.1 / 2019-01-08
+v0.1.2 / 2019-01-13
 ==================
 
+  * typo fix.
+  * add test case.
+  * add test case about where-exists.
+
+v0.1.1 / 2019-01-08
+===================
+
+  * Release v0.1.1
   * add typo `SubQueryInput`.
 
 v0.1.0 / 2019-01-08
