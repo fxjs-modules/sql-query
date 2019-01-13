@@ -23,8 +23,8 @@ declare namespace FxSqlQuerySql {
 
 	// ['f1', 'f2'] ---> (`t1.f1` = `t2.f2`)
 	type WhereExistsLinkTuple_L1 = FxSqlQueryHelpler.BinaryTuple<string>
-	// [['f1', 'f2'], ['ff1', 'ff2']] ---> (`t1.f1` = `t2.f2`) AND (`t1.ff1` = `t2.ff2`)
-	type WhereExistsLinkTuple_L2 = FxSqlQueryHelpler.BinaryTuple<FxSqlQueryHelpler.BinaryTuple<string>>
+	// [['f1', 'f2'[, ...]], ['ff1', 'ff2'[, ...]]] ---> (`t1.f1` = `t2.f2`) AND (`t1.ff1` = `t2.ff2`) [...]
+	type WhereExistsLinkTuple_L2 = FxSqlQueryHelpler.BinaryTuple<string[]>
 	type WhereExistsLinkTuple = WhereExistsLinkTuple_L1 | WhereExistsLinkTuple_L2
 
 	interface DetailedQueryWhereCondition extends FxSqlQueryComparator.QueryComparatorObject {
