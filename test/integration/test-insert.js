@@ -30,5 +30,4 @@ describe('insert', () => {
 
 if (require.main === module) {
   test.run(console.DEBUG)
-  process.exit()
 }

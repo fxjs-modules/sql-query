@@ -20,5 +20,4 @@ describe('select-aggregate-groupby', () => {
 
 if (require.main === module) {
   test.run(console.DEBUG)
-  process.exit()
 }

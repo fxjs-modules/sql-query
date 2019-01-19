@@ -34,5 +34,4 @@ describe('where-custom-types', () => {
 
 if (require.main === module) {
     test.run(console.DEBUG)
-    process.exit()
 }

@@ -19,4 +19,3 @@ fs.readdir(dir).forEach(relpath => {
 })
 
 test.run(console.DEBUG)
-process.exit()

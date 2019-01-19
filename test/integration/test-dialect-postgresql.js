@@ -129,5 +129,4 @@ describe('dialect-postgresql', () => {
 
 if (require.main === module) {
   test.run(console.DEBUG)
-  process.exit()
 }
