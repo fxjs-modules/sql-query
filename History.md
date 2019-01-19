@@ -1,7 +1,14 @@
 
-v0.1.3 / 2019-01-19
+v0.1.4 / 2019-01-19
 ==================
 
+  * fix rolluped bundle's format.
+  * fix umd name.
+
+v0.1.3 / 2019-01-19
+===================
+
+  * Release v0.1.3
   * add test about umd bundle.
   * fix test cases.
   * support umd bundle.
