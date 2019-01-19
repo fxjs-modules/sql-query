@@ -23,6 +23,6 @@ const bundle = await rollup.rollup({
 // write bundled result with `bundle.write`
 await bundle.write({
     file: path.resolve(__dirname, './lib/index.umd.js'),
-    name: 'FxSqlDDLSync',
+    name: 'FxSqlQuery',
     format: 'umd'
 }).catch(e => console.error(e));
