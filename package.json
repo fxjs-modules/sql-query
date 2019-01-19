@@ -16,8 +16,10 @@
 		"build": "fib-typify src -o lib",
 		"build:umd": "fibjs ./rollup.build.js",
 		"test": "fibjs test/run",
+		"test:umd": "cross-env ENTRY_SUFFIX=.umd.js fibjs test/vbox",
 		"ci": "npm run build && npm run test",
-		"prepublishOnly": "npm run build && npm run build:umd"
+		"ci:umd": "npm run build && npm run test:umd",
+		"prepublishOnly": "npm run build && npm run ci:umd"
 	},
 	"main": "./lib/Query",
 	"unpkg": "./lib/index.umd.js",
@@ -29,6 +31,7 @@
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
 		"@types/fibjs": "^0.26.5",
+		"cross-env": "^5.2.0",
 		"fib-rollup": "^0.4.0",
 		"fib-typify": "^0.4.1",
 		"rollup-plugin-commonjs": "^9.2.0"
