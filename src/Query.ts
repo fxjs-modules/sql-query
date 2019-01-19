@@ -10,6 +10,7 @@ import { RemoveQuery } from "./Remove";
 
 import ComparatorsHash 	= require("./Comparators");
 import Helpers     		= require('./Helpers');
+import Dialects 		= require('./Dialects')
 
 export const comparators = ComparatorsHash;
 export const Text: FxSqlQuery.TypedQueryObjectWrapper<"text"> = buildQueryType<"text">("text");
@@ -51,7 +52,7 @@ export class Query implements FxSqlQuery.Class_Query {
 		}
 		this.opts = opts
 
-		this.Dialect = require("./Dialects/" + (opts.dialect || "mysql"));
+		this.Dialect = Dialects[opts.dialect || "mysql"];
 
 		this.escape = this._proxyFn('escape')
 		this.escapeId = this._proxyFn('escapeId')

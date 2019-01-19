@@ -14,11 +14,14 @@
 	},
 	"scripts": {
 		"build": "fib-typify src -o lib",
+		"build:umd": "fibjs ./rollup.build.js",
 		"test": "fibjs test/run",
 		"ci": "npm run build && npm run test",
-		"prepublishOnly": "npm run build"
+		"prepublishOnly": "npm run build && npm run build:umd"
 	},
 	"main": "./lib/Query",
+	"unpkg": "./lib/index.umd.js",
+	"jsdelivr": "./lib/index.umd.js",
 	"engines": {
 		"fibjs": "*"
 	},
@@ -26,7 +29,9 @@
 	"devDependencies": {
 		"@fibjs/ci": "^2.1.0",
 		"@types/fibjs": "^0.26.5",
-		"fib-typify": "^0.4.1"
+		"fib-rollup": "^0.4.0",
+		"fib-typify": "^0.4.1",
+		"rollup-plugin-commonjs": "^9.2.0"
 	},
 	"ci": {
 		"type": "travis, appveyor",
