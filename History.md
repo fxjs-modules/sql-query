@@ -1,7 +1,15 @@
 
-v0.1.2 / 2019-01-13
+v0.1.3 / 2019-01-19
 ==================
 
+  * add test about umd bundle.
+  * fix test cases.
+  * support umd bundle.
+
+v0.1.2 / 2019-01-13
+===================
+
+  * Release v0.1.2
   * typo fix.
   * add test case.
   * add test case about where-exists.
