@@ -14,16 +14,16 @@
 	},
 	"scripts": {
 		"build": "fib-typify src -o lib",
-		"build:umd": "fibjs ./rollup.build.js",
+		"build:rollup": "fibjs ./rollup.build.js",
 		"test": "fibjs test/run",
-		"test:umd": "cross-env ENTRY_SUFFIX=.umd.js fibjs test/vbox",
+		"test:rollup": "cross-env ENTRY_SUFFIX=.cjs.js fibjs test/vbox",
 		"ci": "npm run build && npm run test",
-		"ci:umd": "npm run build && npm run test:umd",
-		"prepublishOnly": "npm run build && npm run ci:umd"
+		"ci:rollup": "npm run build:rollup && npm run test:rollup",
+		"prepublishOnly": "npm run build && npm run ci:rollup"
 	},
 	"main": "./lib/Query",
-	"unpkg": "./lib/index.umd.js",
-	"jsdelivr": "./lib/index.umd.js",
+	"unpkg": "./lib/index.cjs.js",
+	"jsdelivr": "./lib/index.cjs.js",
 	"engines": {
 		"fibjs": "*"
 	},
