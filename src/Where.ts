@@ -31,7 +31,11 @@ export function build (
 	return "WHERE (" + query.join(") AND (") + ")";
 };
 
-const where_conjunctions = [ "or", "and", "not_or", "not_and", "not" ];
+const WHERE_CONJUNCTIONS = [ "or", "and", "not_or", "not_and", "not" ];
+
+function isKeyConjunctionNot (k: string) {
+	return k.indexOf("_") >= 0
+}
 
 function buildOrGroup(
 	Dialect: FxSqlQueryDialect.Dialect,
@@ -78,11 +82,11 @@ function buildOrGroup(
 			continue;
 		}
 		// `not` is an alias for `not_and`
-		if (where_conjunctions.indexOf(k) >= 0) {
+		if (WHERE_CONJUNCTIONS.indexOf(k) >= 0) {
 			var q, subquery = [];
-			var prefix = (k == "not" || k.indexOf("_") >= 0 ? "NOT " : false);
+			var prefix = (k == "not" || isKeyConjunctionNot(k) ? "NOT " : false);
 
-			op = (k == "not" ? "and" : (k.indexOf("_") >= 0 ? k.substr(4) : k)).toUpperCase();
+			op = (k == "not" ? "and" : (isKeyConjunctionNot(k) ? k.substr(4) : k)).toUpperCase();
 
 			const conj_cond_item = where.w[k] as FxSqlQueryComparator.SubQueryInput[]
 			for (var j = 0; j < conj_cond_item.length; j++) {
