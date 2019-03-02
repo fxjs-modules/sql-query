@@ -68,7 +68,7 @@ function convertTimezone(tz: FxSqlQuery.FxSqlQueryTimezone): false | number {
 	return false;
 }
 
-export const get_table_alias: FxSqlQueryHelpler.HelperModule['get_table_alias'] = function (
+export function get_table_alias (
 	sql: FxSqlQuerySql.SqlQueryChainDescriptor, table: string
 ): string {
 	for (let i = 0; i < sql.from.length; i++) {
@@ -78,6 +78,16 @@ export const get_table_alias: FxSqlQueryHelpler.HelperModule['get_table_alias'] 
 	}
 	return table;
 };
+
+// export function parse_table_alias (
+// 	table: string, sql: FxSqlQuerySql.SqlQueryChainDescriptor
+// ): string {
+// 	let [_, table_alias] = parseTableInputStr(table)
+// 	if (table_alias)
+// 		return table_alias;
+
+// 	return get_table_alias(sql, table)
+// }
 
 export const parseTableInputStr: FxSqlQueryHelpler.HelperModule['parseTableInputStr'] = function (
 	table_name: FxSqlQuerySql.SqlTableInputType
@@ -104,6 +114,10 @@ export const parseTableInputStr: FxSqlQueryHelpler.HelperModule['parseTableInput
 
 export function autoIncreatementTableIndex (from: FxSqlQuerySql.SqlQueryChainDescriptor['from']) {
 	return from.length + 1;
+}
+
+export function defaultTableAliasNameRule (idx: number) {
+	return `t${idx}`
 }
 
 export const DialectTypes: FxSqlQueryDialect.DialectType[] = ['mysql', 'sqlite', 'mssql']

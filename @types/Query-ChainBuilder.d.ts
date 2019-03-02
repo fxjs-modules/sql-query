@@ -44,7 +44,7 @@ declare namespace FxSqlQuery {
 		groupBy: (...args: FxSqlQuerySql.SqlGroupByType[]) => this
 		fun: (fun: string, column?: FxSqlQuerySql.SqlColumnType, alias?: string) => this
 		from: (
-			table: string,
+			table: FxSqlQuerySql.SqlTableInputType,
 			from_id: FxSqlQueryHelpler.Arraiable<string>,
 			to_table: string,
 			to_id?: FxSqlQueryHelpler.Arraiable<string>,

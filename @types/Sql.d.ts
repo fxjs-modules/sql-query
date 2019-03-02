@@ -102,12 +102,21 @@ declare namespace FxSqlQuerySql {
 		// table alias
 		a: string
 		// ?
-		j?: any[]
+		j?: QueryFromJoinTupleDescriptor[]
 		// selected fields
 		select?: SqlSelectFieldsType[]
 		// from opts
 		opts?: QueryFromDescriptorOpts
 	}
+
+	type QueryFromJoinTupleDescriptor = [
+		// from id column name
+		string,
+		// to table alias name
+		string,
+		// from id column name
+		string,
+	]
 
 	interface SqlOrderDescriptor {
 		c: any

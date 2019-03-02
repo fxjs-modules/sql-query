@@ -14,7 +14,6 @@ declare namespace FxSqlQueryHelpler {
 		// convertTimezone: {
 		// 	(tz: FxSqlQuery.FxSqlQueryTimezone ): false | number
 		// }
-		get_table_alias ( sql: FxSqlQuerySql.SqlQueryChainDescriptor, table: string ): string
 		parseTableInputStr ( table_name: FxSqlQuerySql.SqlTableInputType ): FxSqlQuerySql.SqlTableTuple
 
 		DialectTypes: FxSqlQueryDialect.DialectType[]
