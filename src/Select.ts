@@ -110,8 +110,8 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	}
 	from (
 		table: string,
-		from_id?: FxSqlQueryHelpler.Arraiable<string>,
-		to_table?: string,
+		from_id: FxSqlQueryHelpler.Arraiable<string>,
+		to_table: string,
 		to_id?: FxSqlQueryHelpler.Arraiable<string>,
 		fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
 	): this {
@@ -125,9 +125,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			return this;
 		}
 
-		var alias: string,
-			from_id: FxSqlQueryHelpler.Arraiable<string> = from_id,
-			to_id: FxSqlQueryHelpler.Arraiable<string>;
+		var alias: string;
 
 		var args = Array.prototype.slice.call(arguments);
 		var last = args[args.length - 1];
@@ -140,9 +138,8 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		if (args.length == 3) {
 			alias = this.sql.from[this.sql.from.length - 1].a;
 			to_id = to_table;
-		} else {
+		} else { // expect args.length === 4
 			alias = get_table_alias(this.sql, to_table);
-			to_id = to_id;
 		}
 
 		from.j = [];
@@ -167,6 +164,11 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		)[]
 	): this {
 		var whereItem: FxSqlQuerySubQuery.SubQueryBuildDescriptor = null;
+		const pushNonEmptyWhereItem = () => {
+			if (whereItem !== null) {
+				this.sql.where.push(whereItem);
+			}
+		}
 
 		for (var i = 0; i < whereConditions.length; i++) {
 			if (whereConditions[i] === null) {
@@ -186,28 +188,26 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 						}
 					]
 				 */
-				const cond_str = whereConditions[i] as FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0]
-				if (whereItem !== null) {
-					this.sql.where.push(whereItem);
-				}
+				const table_or_alias = whereConditions[i] as FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0]
+				pushNonEmptyWhereItem()
 				whereItem = {
-					t: get_table_alias(this.sql, cond_str),
+					t: get_table_alias(this.sql, table_or_alias),
 					w: whereConditions[i + 1] as FxSqlQuerySubQuery.WhereExistsTuple_Flatten[1]
 				};
 				i++;
-			} else {
-				if (whereItem !== null) {
-					this.sql.where.push(whereItem);
-				}
+			} else { // expect it's `FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']`
+				pushNonEmptyWhereItem()
 				whereItem = {
 					t: null,
 					w: whereConditions[i] as FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']
 				};
 			}
 		}
-		if (whereItem !== null) {
-			this.sql.where.push(whereItem);
-		}
+		pushNonEmptyWhereItem()
+
+		// make tmp variable null.
+		whereItem = null;
+
 		return this;
 	}
 	whereExists (table: string, table_link: string, link: FxSqlQuerySql.WhereExistsLinkTuple, cond: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']) {

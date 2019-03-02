@@ -1,6 +1,6 @@
 declare namespace FxSqlQuerySubQuery {
 	interface SubQueryBuildDescriptor {
-		// table name
+		// table name or its alias name
 		t: string
 		// where conditions
 		/**

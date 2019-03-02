@@ -101,10 +101,19 @@ describe('where', () => {
       'SELECT * FROM `table1` WHERE (`col1` = 1 AND `col2` = 2) AND (`col3` = 3)'
     )
 
+	// .where(tablename, conditions, tablename, conditions)
     assert.equal(
       common.Select().from('table1')
         .from('table2', 'id', 'id')
         .where('table1', { col: 1 }, 'table2', { col: 2 }).build(),
+      'SELECT * FROM `table1` `t1` JOIN `table2` `t2` ON `t2`.`id` = `t1`.`id` WHERE (`t1`.`col` = 1) AND (`t2`.`col` = 2)'
+    )
+
+	// .where(tablename, conditions, aliasname, conditions)
+    assert.equal(
+      common.Select().from('table1')
+        .from('table2', 'id', 'id')
+        .where('table1', { col: 1 }, 't2', { col: 2 }).build(),
       'SELECT * FROM `table1` `t1` JOIN `table2` `t2` ON `t2`.`id` = `t1`.`id` WHERE (`t1`.`col` = 1) AND (`t2`.`col` = 2)'
     )
 

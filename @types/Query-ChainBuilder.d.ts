@@ -45,10 +45,10 @@ declare namespace FxSqlQuery {
 		fun: (fun: string, column?: FxSqlQuerySql.SqlColumnType, alias?: string) => this
 		from: (
 			table: string,
-			from_id?: FxSqlQueryHelpler.Arraiable<string>,
-			to_table?: string,
+			from_id: FxSqlQueryHelpler.Arraiable<string>,
+			to_table: string,
 			to_id?: FxSqlQueryHelpler.Arraiable<string>,
-			from_opts?: FxSqlQuerySql.QueryFromDescriptorOpts
+			fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
 		) => this
 
 		[extra: string]: any
