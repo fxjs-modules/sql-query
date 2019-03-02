@@ -1,7 +1,17 @@
 
-v0.1.4 / 2019-01-19
+v0.2.0 / 2019-03-03
 ==================
 
+  * better support for table alias.
+  * expose helpers.
+  * literal change.
+  * robust chanage.
+  * [Where.ts]better literal code.
+
+v0.1.4 / 2019-01-19
+===================
+
+  * Release v0.1.4
   * fix rolluped bundle's format.
   * fix umd name.
 
