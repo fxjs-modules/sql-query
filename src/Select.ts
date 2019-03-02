@@ -117,7 +117,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	): this {
 		var from: FxSqlQuerySql.QueryFromDescriptor = {
 			t: table,							// table
-			a: "t" + (this.sql.from.length + 1)		// alias
+			a: "t" + Helpers.autoIncreatementTableIndex(this.sql.from)		// alias
 		};
 
 		if (this.sql.from.length === 0) {

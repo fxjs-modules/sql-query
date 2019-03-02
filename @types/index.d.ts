@@ -12,6 +12,7 @@
 declare module "@fxjs/sql-query" {
     export const comparators: FxSqlQueryComparator.ComparatorHash
     export const Text: FxSqlQuery.TypedQueryObjectWrapper<'text'>
+	export const Helpers: FxSqlQueryHelpler.HelperModule
 
     export const Query: typeof FxSqlQuery.Class_Query
 }

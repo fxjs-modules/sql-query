@@ -9,10 +9,11 @@ import { UpdateQuery } from "./Update";
 import { RemoveQuery } from "./Remove";
 
 import ComparatorsHash 	= require("./Comparators");
-import Helpers     		= require('./Helpers');
+import _Helpers     		= require('./Helpers');
 import Dialects 		= require('./Dialects')
 
 export const comparators = ComparatorsHash;
+export const Helpers: FxSqlQueryHelpler.HelperModule = _Helpers;
 export const Text: FxSqlQuery.TypedQueryObjectWrapper<"text"> = buildQueryType<"text">("text");
 
 export class Query implements FxSqlQuery.Class_Query {

@@ -16,6 +16,11 @@ declare namespace FxSqlQuerySql {
 	type SqlAssignmentValues = SqlEscapeArgType[]
 	type SqlAssignmentTuple = [FxSqlQuerySql.SqlFragmentStr, [...SqlAssignmentValues]?]
 
+	type SqlTableRaw = string
+	type SqlTableAliasRaw = string
+	type SqlTableTuple = [string, string]
+	type SqlTableInputType = SqlTableRaw | SqlTableAliasRaw | SqlTableTuple
+
 	type WhereObj = {
 		str: string
 		escapes: any[]

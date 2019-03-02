@@ -2,11 +2,11 @@
 // "name LIKE ? AND age > ?", ["John", 23]
 // into:
 // "name LIKE 'John' AND age > 23"
-export function escapeQuery (
+export const escapeQuery: FxSqlQueryHelpler.HelperModule['escapeQuery'] = function (
 	Dialect: FxSqlQueryDialect.Dialect,
 	query: FxSqlQuerySql.SqlFragmentStr,
 	args: FxSqlQuerySql.SqlAssignmentValues
-) {
+): FxSqlQuerySql.SqlFragmentStr {
 	let pos = 0;
 
 	return query.replace(/\?{1,2}/g, function (match) {
@@ -18,7 +18,9 @@ export function escapeQuery (
 	});
 }
 
-export function dateToString (date: number|Date, timeZone: FxSqlQuery.FxSqlQueryTimezone, opts: FxSqlQuery.ChainBuilderOptions) {
+export const dateToString: FxSqlQueryHelpler.HelperModule['dateToString'] = function (
+	date: number|Date, timeZone: FxSqlQuery.FxSqlQueryTimezone, opts: FxSqlQuery.ChainBuilderOptions
+): string {
 	const dt = new Date(date);
 
 	if (timeZone != 'local') {
@@ -45,7 +47,9 @@ export function dateToString (date: number|Date, timeZone: FxSqlQuery.FxSqlQuery
 	}
 }
 
-export function zeroPad(number: string|number, n: number = 2) {
+export const zeroPad: FxSqlQueryHelpler.HelperModule['zeroPad'] = function (
+	number: string|number, n: number = 2
+): string {
 	number = "" + number;
 
 	while (number.length < n) {
@@ -64,7 +68,9 @@ function convertTimezone(tz: FxSqlQuery.FxSqlQueryTimezone): false | number {
 	return false;
 }
 
-export function get_table_alias (sql: FxSqlQuerySql.SqlQueryChainDescriptor, table: string): string {
+export const get_table_alias: FxSqlQueryHelpler.HelperModule['get_table_alias'] = function (
+	sql: FxSqlQuerySql.SqlQueryChainDescriptor, table: string
+): string {
 	for (let i = 0; i < sql.from.length; i++) {
 		if (sql.from[i].t == table) {
 			return sql.from[i].a;
@@ -72,5 +78,32 @@ export function get_table_alias (sql: FxSqlQuerySql.SqlQueryChainDescriptor, tab
 	}
 	return table;
 };
+
+export const parseTableInputStr: FxSqlQueryHelpler.HelperModule['parseTableInputStr'] = function (
+	table_name: FxSqlQuerySql.SqlTableInputType
+): FxSqlQuerySql.SqlTableTuple {
+	if (!table_name)
+		throw `invalid input table_name!`
+
+	let ta_tuple: FxSqlQuerySql.SqlTableTuple = ['', ''];
+
+	if (typeof table_name === 'string') {
+		table_name = table_name.trim()
+
+		if (table_name.indexOf(' as ') > 0) {
+			ta_tuple = table_name.split(' as ').slice(0, 2) as FxSqlQuerySql.SqlTableTuple
+		} else {
+			ta_tuple = table_name.split(' ').slice(0, 2) as FxSqlQuerySql.SqlTableTuple
+		}
+	} else {
+		ta_tuple = table_name.slice(0, 2) as FxSqlQuerySql.SqlTableTuple
+	}
+
+	return ta_tuple
+}
+
+export function autoIncreatementTableIndex (from: FxSqlQuerySql.SqlQueryChainDescriptor['from']) {
+	return from.length + 1;
+}
 
 export const DialectTypes: FxSqlQueryDialect.DialectType[] = ['mysql', 'sqlite', 'mssql']
