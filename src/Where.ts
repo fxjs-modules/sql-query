@@ -14,7 +14,7 @@ export function build (
 	var query = [],
 		subquery;
 
-	for (var i = 0; i < whereList.length; i++) {
+	for (let i = 0; i < whereList.length; i++) {
 		subquery = buildOrGroup(Dialect, whereList[i], opts);
 
 		if (subquery !== false) {
@@ -74,7 +74,7 @@ function buildOrGroup(
 	var query = [],
 		op: FxSqlQueryComparator.QueryComparatorType;
 
-	for (var k in where.w) {
+	for (let k in where.w) {
 		if (where.w[k] === null || where.w[k] === undefined) {
 			query.push(
 				buildComparisonKey(Dialect, where.t, k) +

@@ -20,7 +20,7 @@ export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 		query.push(this.Dialect.escapeId(this.sql.table));
 
 		if (this.sql.hasOwnProperty("set")) {
-			for (var k in this.sql.set) {
+			for (let k in this.sql.set) {
 				cols.push(this.Dialect.escapeId(k));
 				vals.push(this.Dialect.escapeVal(this.sql.set[k], this.opts.timezone));
 			}

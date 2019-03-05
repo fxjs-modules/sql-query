@@ -3,6 +3,10 @@
 /// <reference path="Query-ChainBuilder.d.ts" />
 
 declare namespace FxSqlQuery {
+    type OrderNormalizedTuple = [string|string[], "Z" | "A"]
+    type OrderSqlStyleTuple = [FxSqlQuerySql.SqlFragmentStr, FxSqlQuerySql.SqlAssignmentValues?]
+    type OrderNormalizedResult = OrderNormalizedTuple | OrderSqlStyleTuple
+
 	interface QueryOptions {
 		dialect?: FxSqlQueryDialect.DialectType /*  | string */
 		timezone?: FxSqlQueryTimezone
@@ -12,6 +16,7 @@ declare namespace FxSqlQuery {
 		// Z means 'z->a'
 		'Z'
 		// other string means 'a->z'
+		| 'A'
 		| string
 
 	type FxSqlQueryTimezone =

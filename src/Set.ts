@@ -11,7 +11,7 @@ export function build (
 
 	var query = [];
 
-	for (var k in set) {
+	for (let k in set) {
 		query.push(
 			Dialect.escapeId(k) +
 			" = " +

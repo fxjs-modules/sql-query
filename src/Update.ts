@@ -19,7 +19,7 @@ export class UpdateQuery implements FxSqlQuery.ChainBuilder__Update {
 		return this;
 	}
 	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) {
-		for (var i = 0; i < whereConditions.length; i++) {
+		for (let i = 0; i < whereConditions.length; i++) {
 			this.sql.where.push({
 				t: null,
 				w: whereConditions[i]

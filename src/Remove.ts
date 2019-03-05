@@ -14,7 +14,7 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		return this;
 	}
 	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) {
-		for (var i = 0; i < whereConditions.length; i++) {
+		for (let i = 0; i < whereConditions.length; i++) {
 			this.sql.where.push({
 				t: null,
 				w: whereConditions[i]
@@ -41,10 +41,13 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 			const order = this.sql.order as FxSqlQuerySql.SqlOrderDescriptor[]
 			const tmp: string[] = [];
 			for (let i = 0; i < order.length; i++) {
-				if (Array.isArray(order[i].c)) {
-					tmp.push(this.Dialect.escapeId.apply(this.Dialect, order[i].c) + " " + order[i].d);
+				const col_desc = order[i].c;
+				const zdir = order[i].d;
+
+				if (Array.isArray(col_desc)) {
+					tmp.push(this.Dialect.escapeId.apply(this.Dialect, col_desc) + " " + zdir);
 				} else {
-					tmp.push(this.Dialect.escapeId(order[i].c) + " " + order[i].d);
+					tmp.push(this.Dialect.escapeId(col_desc) + " " + zdir);
 				}
 			}
 

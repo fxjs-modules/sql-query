@@ -118,11 +118,19 @@ declare namespace FxSqlQuerySql {
 		string,
 	]
 
+	type SqlTableOrderTuple = [
+		// table(alias) name
+		string,
+		// column name
+		string
+	]
 	interface SqlOrderDescriptor {
-		c: any
-		d: any
+		// column name or SqlTableOrderTuple
+		c: string | SqlTableOrderTuple
+		// order
+		d: 'DESC' | 'ASC'
 	}
-	type SqlOrderPayloadType = SqlOrderDescriptor | SqlFragmentStr
+	type SqlOrderPayloadType = SqlOrderDescriptor | FxSqlQuery.OrderSqlStyleTuple[0]
 
 	type SqlGroupByType = string
 

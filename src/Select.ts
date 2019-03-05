@@ -199,7 +199,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			}
 		}
 
-		for (var i = 0; i < whereConditions.length; i++) {
+		for (let i = 0; i < whereConditions.length; i++) {
 			if (whereConditions[i] === null) {
 				continue;
 			}
@@ -260,15 +260,24 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		this.sql.limit = limit;
 		return this;
 	}
-	order (column: FxSqlQuerySql.SqlFragmentStr, dir: string | FxSqlQuerySql.SqlAssignmentValues) {
+	order (column: FxSqlQuery.OrderNormalizedResult[0], dir?: FxSqlQuery.OrderNormalizedResult[1]) {
+		// sql type tuple
 		if (Array.isArray(dir)) {
 			this.sql.order.push(
-				Helpers.escapeQuery(this.Dialect, column, dir as any)
+				Helpers.escapeQuery(
+					this.Dialect,
+					column as FxSqlQuery.OrderSqlStyleTuple[0],
+					dir
+				)
 			);
+		// normalized order array
 		} else {
 			this.sql.order.push({
-				c : Array.isArray(column) ? [ get_table_alias(this.sql, column[0]), column[1] ] : column,
-				d : (dir == "Z" ? "DESC" : "ASC")
+				c : Array.isArray(column) ? [
+					get_table_alias(this.sql, column[0]),
+					column[1]
+				] : column,
+				d : (dir === "Z" ? "DESC" : "ASC")
 			});
 		}
 		return this;

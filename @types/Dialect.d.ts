@@ -1,7 +1,7 @@
 /// <reference path="Sql.d.ts" />
 
 declare namespace FxSqlQueryDialect {
-	type DialectType = 'mysql' | 'mssql' | 'sqlite'
+	type DialectType = 'mysql' | 'mssql' | 'sqlite' | 'postgresql'
 
 	interface DataTypesDescriptorBase {
 		id: string
@@ -12,7 +12,7 @@ declare namespace FxSqlQueryDialect {
 	}
 
 	type DialectFieldType = keyof DataTypesDescriptorBase
-	
+
 	interface DataTypesDescriptor extends DataTypesDescriptorBase {
 		isSQLITE?: boolean
 	}

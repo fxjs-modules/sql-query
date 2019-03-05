@@ -19,8 +19,18 @@ declare namespace FxSqlQuery {
 	}
 
 	interface ChainBuilderSortMixin {
-		order(column: string, dir: QueryOrderDirection): this
-		order(column: FxSqlQuerySql.SqlFragmentStr, assignment_tuple: [...FxSqlQuerySql.SqlAssignmentValues]): this
+		/**
+		 *
+		 * @param column
+		 * @param dir
+		 *
+		 * @sample
+		 * .order('col1', 'Z')
+		 * .order(['table1', 'col1'], 'A')
+		 * .order('ID DESC')
+		 * .order('?? DESC', ['ID'])
+		 */
+		order(column: FxSqlQuery.OrderNormalizedResult[0], dir?: FxSqlQuery.OrderNormalizedResult[1]): this
 	}
 
 	type ChainBuilder__SelectAggregationFunColumnArg = (string | string[])[]
