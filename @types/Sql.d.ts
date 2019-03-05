@@ -135,6 +135,7 @@ declare namespace FxSqlQuerySql {
 	type SqlGroupByType = string
 
 	interface SqlFoundRowItem {
+		[k: string]: any
 	}
 
 	// type SqlQueryDescriptorWhereItem = SqlWhereDescriptor | string
