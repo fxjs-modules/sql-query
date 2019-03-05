@@ -1,7 +1,14 @@
 
-v0.2.0 / 2019-03-03
+v0.2.1 / 2019-03-06
 ==================
 
+  * little typo change.
+  * type robust change.
+
+v0.2.0 / 2019-03-03
+===================
+
+  * Release v0.2.0
   * better support for table alias.
   * expose helpers.
   * literal change.
