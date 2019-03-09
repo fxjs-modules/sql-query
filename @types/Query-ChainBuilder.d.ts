@@ -53,13 +53,24 @@ declare namespace FxSqlQuery {
 		) => this
 		groupBy: (...args: FxSqlQuerySql.SqlGroupByType[]) => this
 		fun: (fun: string, column?: FxSqlQuerySql.SqlColumnType, alias?: string) => this
-		from: (
-			table: FxSqlQuerySql.SqlTableInputType,
-			from_id: FxSqlQueryHelpler.Arraiable<string>,
-			to_table: string,
-			to_id?: FxSqlQueryHelpler.Arraiable<string>,
-			fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
-		) => this
+		from: {
+			/**
+			 * @warning can be only used in first call!
+			 */
+			(table: FxSqlQuerySql.SqlTableInputType): ChainBuilder__Select
+			(
+				table: FxSqlQuerySql.SqlTableInputType,
+				from_id: FxSqlQueryHelpler.Arraiable<string>,
+				to_id: FxSqlQueryHelpler.Arraiable<string>
+			): ChainBuilder__Select
+			(
+				table: FxSqlQuerySql.SqlTableInputType,
+				from_id: FxSqlQueryHelpler.Arraiable<string>,
+				to_table: string,
+				to_id: FxSqlQueryHelpler.Arraiable<string>,
+				fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
+			): ChainBuilder__Select
+		}
 
 		[extra: string]: any
 	}
