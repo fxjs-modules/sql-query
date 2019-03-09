@@ -1,7 +1,13 @@
 
-v0.2.1 / 2019-03-06
+v0.2.2 / 2019-03-09
 ==================
 
+  * typo robust.
+
+v0.2.1 / 2019-03-06
+===================
+
+  * Release v0.2.1
   * little typo change.
   * type robust change.
 
