@@ -8,9 +8,10 @@ declare namespace FxSqlQuerySubQuery {
 		 * - FxSqlQueryComparator.SubQueryInput[]
 		 * - FxSqlQueryComparator.InputValueType
 		 * - FxSqlQueryComparator.QueryComparatorObject
+		 * - FxSqlQueryComparator.QueryComparatorLiteralObject
 		 */
 		w: {
-			[k: string]: FxSqlQueryComparator.SubQueryInput[] | FxSqlQueryComparator.InputValueType | FxSqlQueryComparator.QueryComparatorObject | UnderscoreSqlInput
+			[k: string]: ConjunctionInputValue | NonConjunctionInputValue
 		}
 		// exists query info
 		e?: FxSqlQuerySql.QueryWhereExtendItem
@@ -20,7 +21,12 @@ declare namespace FxSqlQuerySubQuery {
 
 	// {'__sql': [..., ?[...]]}
 	type UnderscoreSqlInput = [FxSqlQuerySql.SqlAssignmentTuple]
-	type NonConjunctionInputValue = FxSqlQueryComparator.InputValueType | FxSqlQueryComparator.QueryComparatorObject | UnderscoreSqlInput
+	type ConjunctionInputValue = FxSqlQueryComparator.SubQueryInput[]
+	type NonConjunctionInputValue =
+		FxSqlQueryComparator.InputValueType
+		| FxSqlQueryComparator.QueryComparatorObject
+		| FxSqlQueryComparator.QueryComparatorLiteralObject
+		| UnderscoreSqlInput
 
 	type WhereExistsTuple_Flatten = [
 		// ['table1', {col1: 'v1'}, 'table2', {col2: Query.gte('v2')}]
@@ -35,6 +41,7 @@ declare namespace FxSqlQuerySubQuery {
 		not_and?: FxSqlQueryComparator.SubQueryInput[]
 		not?: FxSqlQueryComparator.SubQueryInput[]
 	}
+	type KeyOf_ConjunctionInput = keyof ConjunctionInput__Sample
 	// only for sample
 	interface NonConjunctionInput__Sample {
 		[k: string]: FxSqlQueryComparator.InputValueType

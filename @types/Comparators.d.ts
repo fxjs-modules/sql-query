@@ -50,25 +50,10 @@ declare namespace FxSqlQueryComparator {
 		[key: string]: InputValueType
 	}
 
-	type QueryComparatorType =
-		string
-		| 'between'
-		| 'not_between'
-		| 'like'
-		| 'not_like'
-		| 'eq'
-		| 'ne'
-		| 'gt'
-		| 'gte'
-		| 'lt'
-		| 'lte'
-		| 'not_in'
-		| 'sql'
-
 	type QueryComparatorExprType = string
 	type QueryComparatorObject = {
 		sql_comparator: {
-			(): QueryComparatorType
+			(): ComparatorNames
 		}
 		// value
 		val?: any
@@ -78,6 +63,19 @@ declare namespace FxSqlQueryComparator {
 		from?: string
 		// to field
 		to?: string
+	}
+	interface QueryComparatorLiteralObject {
+		between: any | any[]
+		not_between: any | any[]
+		like: any | any[]
+		not_like: any | any[]
+		eq: any | any[]
+		ne: any | any[]
+		gt: any | any[]
+		gte: any | any[]
+		lt: any | any[]
+		lte: any | any[]
+		not_in: any | any[]
 	}
 
 	type ComparatorHash = {
@@ -94,7 +92,13 @@ declare namespace FxSqlQueryComparator {
 		not_in: FxSqlQueryComparatorFunction.not_in
 	}
 
-	type ComparatorNames = keyof ComparatorHash
+	type ComparatorNameType = keyof ComparatorHash
+	// just compatible
+	type ComparatorNames = ComparatorNameType
+
+	type QueryComparatorType =
+		ComparatorNameType
+		| 'sql'
 }
 
 declare namespace FxSqlQueryComparatorFunction {
