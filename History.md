@@ -1,7 +1,13 @@
 
-v0.2.3 / 2019-03-11
+v0.2.4 / 2019-03-11
 ==================
 
+  * typo robust; fix mistake in process of `in/not_in` literal comparator object.
+
+v0.2.3 / 2019-03-11
+===================
+
+  * Release v0.2.3
   * robust change; support literal comparator descriptor for `buildOrGroup`.
 
 v0.2.2 / 2019-03-09
