@@ -51,12 +51,12 @@ declare namespace FxSqlQueryComparator {
 	}
 
 	type QueryComparatorExprType = string
-	type QueryComparatorObject = {
+	type QueryComparatorObject<T = any> = {
 		sql_comparator: {
 			(): ComparatorNames
 		}
 		// value
-		val?: any
+		val?: T
 		// expression regular
 		expr?: QueryComparatorExprType
 		// from field
@@ -64,6 +64,7 @@ declare namespace FxSqlQueryComparator {
 		// to field
 		to?: string
 	}
+
 	interface QueryComparatorLiteralObject {
 		between: any | any[]
 		not_between: any | any[]
@@ -75,6 +76,7 @@ declare namespace FxSqlQueryComparator {
 		gte: any | any[]
 		lt: any | any[]
 		lte: any | any[]
+		in: any | any[]
 		not_in: any | any[]
 	}
 
@@ -89,6 +91,7 @@ declare namespace FxSqlQueryComparator {
 		gte: FxSqlQueryComparatorFunction.gte
 		lt: FxSqlQueryComparatorFunction.lt
 		lte: FxSqlQueryComparatorFunction.lte
+		in: FxSqlQueryComparatorFunction.not_in
 		not_in: FxSqlQueryComparatorFunction.not_in
 	}
 

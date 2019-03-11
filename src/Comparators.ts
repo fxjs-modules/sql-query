@@ -49,6 +49,11 @@ function lte (v: any) {
 	return createSpecialObject({ val: v }, 'lte');
 };
 
+type _in = FxSqlQueryComparatorFunction.not_in
+function _in (v: any) {
+	return createSpecialObject({ val: v }, 'in');
+};
+
 type not_in = FxSqlQueryComparatorFunction.not_in
 function not_in (v: any) {
 	return createSpecialObject({ val: v }, 'not_in');
@@ -65,6 +70,7 @@ export = {
 	gte,
 	lt,
 	lte,
+	in: _in,
 	not_in,
 } as FxSqlQueryComparator.ComparatorHash
 

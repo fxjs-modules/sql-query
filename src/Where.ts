@@ -78,7 +78,7 @@ function buildOrGroup(
 	/* end of deal with case `whereExists` */
 	}
 
-	let query = [],
+	let query: string[] = [],
 		op: FxSqlQueryComparator.QueryComparatorType,
 		transformed_result_op: string = op;
 
@@ -117,46 +117,43 @@ function buildOrGroup(
 			continue;
 		}
 
-		let non_conjunction_where_conditem_value: FxSqlQuerySubQuery.NonConjunctionInputValue
+		let non_conj_where_conditem_value: FxSqlQuerySubQuery.NonConjunctionInputValue
 			= transformSqlComparatorLiteralObject(where_conditem_value, k, where.w) || where_conditem_value;
 
-		if (isSqlComparatorPayload(non_conjunction_where_conditem_value)) {
-			const query_comparator_obj = non_conjunction_where_conditem_value as FxSqlQuerySql.DetailedQueryWhereCondition
-
-			op = query_comparator_obj.sql_comparator();
-			const normalized_cond = query_comparator_obj as FxSqlQuerySql.DetailedQueryWhereCondition
+		if (isSqlComparatorPayload(non_conj_where_conditem_value)) {
+			op = non_conj_where_conditem_value.sql_comparator();
 
 			switch (op) {
 				case "between":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" BETWEEN " +
-						Dialect.escapeVal(normalized_cond.from, opts.timezone) +
+						Dialect.escapeVal(non_conj_where_conditem_value.from, opts.timezone) +
 						" AND " +
-						Dialect.escapeVal(normalized_cond.to, opts.timezone)
+						Dialect.escapeVal(non_conj_where_conditem_value.to, opts.timezone)
 					);
 					break;
 				case "not_between":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" NOT BETWEEN " +
-						Dialect.escapeVal(normalized_cond.from, opts.timezone) +
+						Dialect.escapeVal(non_conj_where_conditem_value.from, opts.timezone) +
 						" AND " +
-						Dialect.escapeVal(normalized_cond.to, opts.timezone)
+						Dialect.escapeVal(non_conj_where_conditem_value.to, opts.timezone)
 					);
 					break;
 				case "like":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" LIKE " +
-						Dialect.escapeVal(normalized_cond.expr, opts.timezone)
+						Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone)
 					);
 					break;
 				case "not_like":
 					query.push(
 						buildComparisonKey(Dialect, where.t, k) +
 						" NOT LIKE " +
-						Dialect.escapeVal(normalized_cond.expr, opts.timezone)
+						Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone)
 					);
 					break;
 				case "eq":
@@ -165,36 +162,43 @@ function buildOrGroup(
 				case "gte":
 				case "lt":
 				case "lte":
+				case "in":
 				case "not_in":
 					switch (op) {
-						case "eq"  : transformed_result_op = (normalized_cond.val === null ? "IS" : "="); break;
-						case "ne"  : transformed_result_op = (normalized_cond.val === null ? "IS NOT" : "<>"); break;
+						case "eq"  : transformed_result_op = (non_conj_where_conditem_value.val === null ? "IS" : "="); break;
+						case "ne"  : transformed_result_op = (non_conj_where_conditem_value.val === null ? "IS NOT" : "<>"); break;
 						case "gt"  : transformed_result_op = ">";  break;
 						case "gte" : transformed_result_op = ">="; break;
 						case "lt"  : transformed_result_op = "<";  break;
 						case "lte" : transformed_result_op = "<="; break;
+						case "in"  : transformed_result_op = "IN"; break;
 						case "not_in" : transformed_result_op = "NOT IN"; break;
 					}
-					query.push(
-						buildComparisonKey(Dialect, where.t, k) +
-						" " + transformed_result_op + " " +
-						Dialect.escapeVal(normalized_cond.val, opts.timezone)
-					);
+
+					if (!isInStyleOperator(op, non_conj_where_conditem_value))
+						query.push(
+							buildComparisonKey(Dialect, where.t, k) +
+							" " + transformed_result_op + " " +
+							Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone)
+						);
+					else
+						processInStyleWhereConditionInput(non_conj_where_conditem_value.val, query, Dialect, where, k, opts, transformed_result_op);
+
 					break;
 				// case "sql":
-				// 	if (typeof normalized_cond.where == "object") {
-				// 		var sql = normalized_cond.where.str.replace("?:column", buildComparisonKey(Dialect, where.t, k));
+				// 	if (typeof non_conj_where_conditem_value.where == "object") {
+				// 		var sql = non_conj_where_conditem_value.where.str.replace("?:column", buildComparisonKey(Dialect, where.t, k));
 
 				// 		sql = sql.replace(/\?:(id|value)/g, function (m) {
-				// 			if (normalized_cond.where.escapes.length === 0) {
+				// 			if (non_conj_where_conditem_value.where.escapes.length === 0) {
 				// 				return '';
 				// 			}
 
 				// 			if (m == "?:id") {
-				// 				return Dialect.escapeId(normalized_cond.where.escapes.shift());
+				// 				return Dialect.escapeId(non_conj_where_conditem_value.where.escapes.shift());
 				// 			}
 				// 			// ?:value
-				// 			return Dialect.escapeVal(normalized_cond.where.escapes.shift(), opts.timezone);
+				// 			return Dialect.escapeVal(non_conj_where_conditem_value.where.escapes.shift(), opts.timezone);
 				// 		});
 
 				// 		query.push(sql);
@@ -204,24 +208,26 @@ function buildOrGroup(
 			continue;
 		}
 
-		if (isUnderscoreSqlInput(k, non_conjunction_where_conditem_value)) {
-			for (let i = 0; i < non_conjunction_where_conditem_value.length; i++) {
-				query.push(normalizeSqlConditions(Dialect, non_conjunction_where_conditem_value[i]));
+		if (isUnderscoreSqlInput(k, non_conj_where_conditem_value)) {
+			for (let i = 0; i < non_conj_where_conditem_value.length; i++) {
+				query.push(normalizeSqlConditions(Dialect, non_conj_where_conditem_value[i]));
 			}
 		} else {
 			/**
 			 * array as 'IN'
 			 */
-			if (Array.isArray(non_conjunction_where_conditem_value)) {
-				const arr_item_kv = non_conjunction_where_conditem_value as any
-				if (arr_item_kv.length === 0) {
-					// #274: IN with empty arrays should be a false sentence
-					query.push("FALSE");
-				} else {
-					query.push(buildComparisonKey(Dialect, where.t, k) + " IN " + Dialect.escapeVal(arr_item_kv, opts.timezone));
-				}
+			if (Array.isArray(non_conj_where_conditem_value)) {
+				processInStyleWhereConditionInput(
+					non_conj_where_conditem_value,
+					query,
+					Dialect,
+					where,
+					k,
+					opts,
+					'IN'
+				);
 			} else {
-				const normal_kv = non_conjunction_where_conditem_value as any
+				const normal_kv = non_conj_where_conditem_value as any
 				query.push(buildComparisonKey(Dialect, where.t, k) + " = " + Dialect.escapeVal(normal_kv, opts.timezone));
 			}
 		}
@@ -245,7 +251,9 @@ function normalizeSqlConditions(Dialect: FxSqlQueryDialect.Dialect, queryArray: 
 	return Helpers.escapeQuery(Dialect, queryArray[0], queryArray[1]);
 }
 
-function isSqlComparatorPayload (non_special_kv: FxSqlQuerySubQuery.NonConjunctionInputValue) {
+function isSqlComparatorPayload (
+	non_special_kv: FxSqlQuerySubQuery.NonConjunctionInputValue
+): non_special_kv is FxSqlQuerySql.DetailedQueryWhereCondition {
 	if (typeof non_special_kv !== 'object') return false;
 	if (! ('sql_comparator' in non_special_kv)) return false;
 
@@ -268,8 +276,10 @@ function transformSqlComparatorLiteralObject (
 	if (op in ComparatorsHash) {
 		const fn = ComparatorsHash[op] as FxSqlQueryComparator.ComparatorHash[FxSqlQueryComparator.ComparatorNameType]
 		const input = literal_kv[op];
-		const args = Array.isArray(input) ? input : [input];
+		const args = Array.isArray(input) && !['not_in', 'in'].includes(op) ? input : [input];
+
 		const result = fn.apply(null, args);
+
 		payload[payload_k] = result;
 		return result;
 	}
@@ -289,4 +299,30 @@ function isUnderscoreSqlInput (
 	where_conditem_value: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][string]
 ): where_conditem_value is FxSqlQuerySubQuery.UnderscoreSqlInput {
 	return k === '__sql';
+}
+
+function isInStyleOperator (
+	op: string,
+	where_conditem_value: FxSqlQuerySql.DetailedQueryWhereCondition<any>
+): where_conditem_value is FxSqlQuerySql.DetailedQueryWhereCondition__InStyle {
+	return !!~['in', 'not_in'].indexOf(op);
+}
+
+function processInStyleWhereConditionInput (
+	val_in_detailed_query_condition: FxSqlQuerySql.DetailedQueryWhereCondition__InStyle['val'], // FxSqlQueryComparator.InputValue_in['in'] | FxSqlQueryComparator.InputValue_not_in['not_in'],
+	query: string[],
+	Dialect: FxSqlQueryDialect.Dialect,
+	where: FxSqlQuerySubQuery.SubQueryBuildDescriptor,
+	k: string,
+	opts: FxSqlQuery.ChainBuilderOptions,
+	transformed_result_op: 'in' | 'not_in'
+): void {
+	if (val_in_detailed_query_condition.length === 0) {
+		// #274: IN with empty arrays should be a false sentence
+		query.push('FALSE');
+	} else {
+		query.push(
+			`${buildComparisonKey(Dialect, where.t, k)} ${transformed_result_op} ${Dialect.escapeVal(val_in_detailed_query_condition, opts.timezone)}`
+		);
+	}
 }

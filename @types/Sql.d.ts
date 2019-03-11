@@ -32,15 +32,18 @@ declare namespace FxSqlQuerySql {
 	type WhereExistsLinkTuple_L2 = FxSqlQueryHelpler.BinaryTuple<string[]>
 	type WhereExistsLinkTuple = WhereExistsLinkTuple_L1 | WhereExistsLinkTuple_L2
 
-	interface DetailedQueryWhereCondition extends FxSqlQueryComparator.QueryComparatorObject {
+	interface DetailedQueryWhereCondition<T = any> extends FxSqlQueryComparator.QueryComparatorObject<T> {
 		// from table name
 		from: string
 		// target table name
 		to: string
 		expr: FxSqlQueryComparator.QueryComparatorExprType
-		val: any
+		val: T
 		where: WhereObj
 	}
+	type DetailedQueryWhereCondition__InStyle = DetailedQueryWhereCondition<
+		FxSqlQueryComparator.InputValue_in['in'] | FxSqlQueryComparator.InputValue_not_in['not_in']
+	>
 
 	interface QueryWhereConjunctionHash {
 		or?: FxSqlQueryComparator.Input[]

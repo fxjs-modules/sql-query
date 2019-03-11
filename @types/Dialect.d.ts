@@ -31,6 +31,7 @@ declare namespace FxSqlQueryDialect {
 		}
 		escapeVal: {
 			(val: FxSqlQuerySql.SqlEscapeArgType, timezone?: FxSqlQuery.FxSqlQueryTimezone): string
+			(vals: FxSqlQuerySql.DetailedQueryWhereCondition__InStyle['val'], timezone?: FxSqlQuery.FxSqlQueryTimezone): string
 		}
 
 		defaultValuesStmt: string

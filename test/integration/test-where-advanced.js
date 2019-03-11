@@ -65,7 +65,27 @@ describe('where-advanced', () => {
 		);
   	})
 
-  	it('literal where conditions: gt/gte; lt/lte', () => {
+  	it('literal where conditions: eq/ne; gt/gte; lt/lte', () => {
+		assert.equal(
+			common.Select().from('table1').where({
+				not_and: [{
+					col: 1,
+					or: [{
+						col: {
+							eq: 2
+						}
+					}, {
+						col: {
+							ne: '3'
+						}
+					}]
+				}, {
+					col: 4
+				}]
+			}).build(),
+			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col` = 2) OR (`col` <> '3'))) AND (`col` = 4))"
+		);
+
 		assert.equal(
 			common.Select().from('table1').where({
 				not_and: [{
@@ -84,6 +104,68 @@ describe('where-advanced', () => {
 				}]
 			}).build(),
 			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col` >= 2) OR (`col` < 3))) AND (`col` = 4))"
+		);
+  	});
+
+  	it('literal where conditions: in/not_in', () => {
+		assert.equal(
+			common.Select().from('table1').where({
+				not_and: [{
+					col: 1,
+					or: [{
+						col: {
+							in: [2, 7]
+						}
+					}, {
+						col: {
+							not_in: [3, 8]
+						}
+					}]
+				}, {
+					col: 4
+				}]
+			}).build(),
+			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col` IN (2, 7)) OR (`col` NOT IN (3, 8)))) AND (`col` = 4))"
+		);
+
+		assert.equal(
+			common.Select().from('table1').where({
+				not_and: [{
+					col: 1,
+					or: [{
+						col2: {
+							in: []
+						}
+					}, {
+						col2: {
+							not_in: [3, 8]
+						}
+					}]
+				}, {
+					col: 4
+				}]
+			}).build(),
+			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((FALSE) OR (`col2` NOT IN (3, 8)))) AND (`col` = 4))"
+		);
+
+		assert.equal(
+			common.Select().from('table1').where({
+				not_and: [{
+					col: 1,
+					or: [{
+						col2: {
+							in: [2, 7]
+						}
+					}, {
+						col2: {
+							not_in: []
+						}
+					}]
+				}, {
+					col: 4
+				}]
+			}).build(),
+			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col2` IN (2, 7)) OR (FALSE))) AND (`col` = 4))"
 		);
   	});
 
