@@ -1,7 +1,13 @@
 
-v0.2.2 / 2019-03-09
+v0.2.3 / 2019-03-11
 ==================
 
+  * robust change; support literal comparator descriptor for `buildOrGroup`.
+
+v0.2.2 / 2019-03-09
+===================
+
+  * Release v0.2.2
   * typo robust.
 
 v0.2.1 / 2019-03-06
