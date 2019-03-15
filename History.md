@@ -1,7 +1,14 @@
 
-v0.2.4 / 2019-03-11
+v0.2.5 / 2019-03-16
 ==================
 
+  * support `modifiers` for `FxSqlQueryComparator.QueryComparatorLiteralObject`.
+  * typo robust.
+
+v0.2.4 / 2019-03-11
+===================
+
+  * Release v0.2.4
   * typo robust; fix mistake in process of `in/not_in` literal comparator object.
 
 v0.2.3 / 2019-03-11

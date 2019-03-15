@@ -514,7 +514,7 @@ sqlSelect
 
 sqlSelect
   .from('table1')
-  .where({ col: 
+  .where({ col:
   sql.not_like('abc') })
   .build();
 
@@ -527,6 +527,32 @@ sqlSelect
   .build();
 
 "SELECT * FROM `table1` WHERE `col` NOT IN (1, 2, 3)"
+
+
+sqlSelect
+  .from('table1')
+  .where({ col: {
+	  not_in: ([ 1, 2, 3 ])
+  })
+  .build();
+
+"SELECT * FROM `table1` WHERE `col` NOT IN (1, 2, 3)"
+
+
+sqlSelect
+  .from('table1')
+  .where({ col: {
+	  	between: [
+			"2019-03-06T00:00:16.000Z",
+			"2019-03-06T00:09:16.000Z",
+		]
+  })
+  .build();
+
+"SELECT * FROM `table1` WHERE `col` BETWEEN ('2019-03-06T00:00:16.000Z', '2019-03-06T00:09:16.000Z')"
+or
+// timezone = 'locale' or Dialect.type === `mysql`
+"SELECT * FROM `table1` WHERE `col` BETWEEN ('2019-03-06 T00:00:16.000', '2019-03-06 00:09:16.000')"
 
 
 sqlSelect

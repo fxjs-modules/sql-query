@@ -1,5 +1,5 @@
 {
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"name": "@fxjs/sql-query",
 	"types": "@types/index.d.ts",
 	"author": "Richard <richardo2016@gmail.com>",
