@@ -1,6 +1,7 @@
 declare namespace FxSqlQueryComparator {
 	type IdType = string | number
 	type SimpleEqValueType = string | number | boolean | Date
+	type NormalizedInOperator = 'in' | 'not_in' | 'IN' | 'NOT_IN'
 
     type InputValue_eq = { "eq": SimpleEqValueType }
     type InputValue_ne = { "ne": SimpleEqValueType }

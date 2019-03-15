@@ -181,8 +181,10 @@ function buildOrGroup(
 							" " + transformed_result_op + " " +
 							Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone)
 						);
-					else
-						processInStyleWhereConditionInput(non_conj_where_conditem_value.val, query, Dialect, where, k, opts, transformed_result_op);
+					else {
+						const op = transformed_result_op as FxSqlQueryComparator.NormalizedInOperator
+						processInStyleWhereConditionInput(non_conj_where_conditem_value.val, query, Dialect, where, k, opts, op);
+					}
 
 					break;
 				// case "sql":
@@ -315,7 +317,7 @@ function processInStyleWhereConditionInput (
 	where: FxSqlQuerySubQuery.SubQueryBuildDescriptor,
 	k: string,
 	opts: FxSqlQuery.ChainBuilderOptions,
-	transformed_result_op: 'in' | 'not_in'
+	transformed_result_op: FxSqlQueryComparator.NormalizedInOperator
 ): void {
 	if (val_in_detailed_query_condition.length === 0) {
 		// #274: IN with empty arrays should be a false sentence
