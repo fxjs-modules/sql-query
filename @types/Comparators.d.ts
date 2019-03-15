@@ -79,6 +79,13 @@ declare namespace FxSqlQueryComparator {
 		lte: any | any[]
 		in: any | any[]
 		not_in: any | any[]
+
+		modifiers?: {
+			is_date?: boolean
+			// timezone?: FxSqlQuery.FxSqlQueryTimezone
+
+			[modifier_name: string]: any
+		}
 	}
 
 	type ComparatorHash = {

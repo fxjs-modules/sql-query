@@ -3,8 +3,15 @@ test.setup()
 
 var common     = require('../common');
 var assert     = require('assert');
+var Helpers = require('../../lib/Helpers');
 
 describe('where-advanced', () => {
+	var rawTimes = [
+		"2019-03-06T00:00:16.000Z",
+		"2019-03-06T00:09:16.000Z",
+	];
+	var formatedTimes = rawTimes.map(t => Helpers.dateToString(new Date(t), 'local', {}));
+
   	it('where-advanced', () => {
 		assert.equal(
 			common.Select().from('table1').where({ or: [ { col: 1 }, { col: 2 } ] }).build(),
@@ -105,6 +112,29 @@ describe('where-advanced', () => {
 			}).build(),
 			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col` >= 2) OR (`col` < 3))) AND (`col` = 4))"
 		);
+
+		assert.equal(
+			common.Select().from('table1').where({
+				not_and: [{
+					col: 1,
+					or: [{
+						col: {
+							gte: rawTimes[0],
+							modifiers: {
+								is_date: true
+							}
+						}
+					}, {
+						col: {
+							lt: 3
+						}
+					}]
+				}, {
+					col: 4
+				}]
+			}).build(),
+			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col` >= '" + formatedTimes[0] + "') OR (`col` < 3))) AND (`col` = 4))"
+		);
   	});
 
   	it('literal where conditions: in/not_in', () => {
@@ -167,6 +197,29 @@ describe('where-advanced', () => {
 			}).build(),
 			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col2` IN (2, 7)) OR (FALSE))) AND (`col` = 4))"
 		);
+
+		assert.equal(
+			common.Select().from('table1').where({
+				not_and: [{
+					col: 1,
+					or: [{
+						col2: {
+							in: rawTimes,
+							modifiers: {
+								is_date: true
+							}
+						}
+					}, {
+						col2: {
+							not_in: []
+						}
+					}]
+				}, {
+					col: 4
+				}]
+			}).build(),
+			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col2` IN (" + `'${formatedTimes[0]}', '${formatedTimes[1]}'` + ")) OR (FALSE))) AND (`col` = 4))"
+		);
   	});
 
   	it('literal where conditions: between/not_between', () => {
@@ -210,6 +263,31 @@ describe('where-advanced', () => {
 				}]
 			}).build(),
 			"SELECT * FROM `table1` WHERE NOT ((`col` = 1 AND ((`col` NOT BETWEEN 3 AND 4) OR (`col` BETWEEN 1 AND 9))) AND (`col` = 4))"
+		);
+
+		assert.equal(
+			common.Select().from('table1').where({
+				not_and: [{
+					col1: {
+						ne: 'abc'
+					},
+					or: [{
+						col2: {
+							ne: 2
+						}
+					}, {
+						col2: {
+							between: rawTimes,
+							modifiers: {
+								is_date: true
+							}
+						}
+					}]
+				}, {
+					col3: 4
+				}]
+			}).build(),
+			"SELECT * FROM `table1` WHERE NOT ((`col1` <> 'abc' AND ((`col2` <> 2) OR (`col2` BETWEEN " + `'${formatedTimes[0]}' AND '${formatedTimes[1]}'` + "))) AND (`col3` = 4))"
 		);
   	});
 })

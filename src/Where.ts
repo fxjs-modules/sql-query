@@ -270,21 +270,37 @@ function transformSqlComparatorLiteralObject (
 	if (typeof non_special_kv !== 'object') return false;
 
 	const keys = Object.keys(non_special_kv) as [FxSqlQueryComparator.ComparatorNameType]
-	if (keys.length !== 1) return false
+	const op: FxSqlQueryComparator.ComparatorNameType = keys.find(k => k in ComparatorsHash);
 
-	const [op] = keys;
+	if (!op)
+		return false;
+
 	const literal_kv = non_special_kv as FxSqlQueryComparator.QueryComparatorLiteralObject;
+	const modifiers = literal_kv.modifiers = literal_kv.modifiers || {};
 
-	if (op in ComparatorsHash) {
-		const fn = ComparatorsHash[op] as FxSqlQueryComparator.ComparatorHash[FxSqlQueryComparator.ComparatorNameType]
-		const input = literal_kv[op];
-		const args = Array.isArray(input) && !['not_in', 'in'].includes(op) ? input : [input];
+	const fn = ComparatorsHash[op] as FxSqlQueryComparator.ComparatorHash[FxSqlQueryComparator.ComparatorNameType]
 
-		const result = fn.apply(null, args);
+	let input = literal_kv[op];
+	// non in-style tuple op contains: `between`, `not_between`
+	const is_in_style = ['not_in', 'in'].includes(op);
+	const in_input_arr = Array.isArray(input);
+	if (modifiers.is_date) {
+		let to_filter = in_input_arr ? input : [input]
+		const args_0 = (to_filter)
+			.map((x: any) => new Date(x))
+			.filter((x: Date) => x + '' !== 'Invalid Date')
 
-		payload[payload_k] = result;
-		return result;
+		if (args_0.length === to_filter.length) {
+			to_filter = args_0
+			input = in_input_arr ? to_filter : to_filter[0]
+		}
 	}
+
+	const apply_args = in_input_arr && !is_in_style ? input : [input];
+	const result = fn.apply(null, apply_args);
+
+	payload[payload_k] = result;
+	return result;
 
 	return false;
 }
