@@ -65,15 +65,21 @@ function buildOrGroup(
 			/**
 			 * @example whereExists('table2', 'table1', ['fid', 'id'], { col1: 1, col2: 2 })
 			 */
-			whereList.push(Dialect.escapeId(table_from) + " = " + Dialect.escapeId(link_table, table_to));
+			if (table_from && table_to)
+				whereList.push(Dialect.escapeId(table_from) + " = " + Dialect.escapeId(link_table, table_to));
 		}
 
+		const exists_join_key = whereList.length ? " AND " : "";
+
 		return [
-			"EXISTS (" +
-			"SELECT * FROM " + Dialect.escapeId(where.e.t) + " " +
-			"WHERE " + whereList.join(" AND ") + " " +
-			"AND " + buildOrGroup(Dialect, { t: null, w: where.w }, opts) +
-			")"
+			[
+				"EXISTS (" +
+				"SELECT * FROM " + Dialect.escapeId(where.e.t) + " " +
+				"WHERE " + whereList.join(" AND "),
+
+				buildOrGroup(Dialect, { t: null, w: where.w }, opts) +
+				")"
+			].join(exists_join_key)
 		];
 	/* end of deal with case `whereExists` */
 	}
