@@ -1,7 +1,16 @@
 
-v0.2.5 / 2019-03-16
+v0.3.0 / 2019-03-18
 ==================
 
+  * code normalization.
+  * semantic internal object.
+  * 0.3.0-dev
+  * support empty tuple-tuple link in exist_item.
+
+v0.2.5 / 2019-03-16
+===================
+
+  * Release v0.2.5
   * support `modifiers` for `FxSqlQueryComparator.QueryComparatorLiteralObject`.
   * typo robust.
 
