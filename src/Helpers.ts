@@ -117,7 +117,7 @@ export function pickAliasFromFromDescriptor(fd: FxSqlQuerySql.QueryFromDescripto
 }
 
 export function pickColumnAsFromSelectFieldsDescriptor(sitem: FxSqlQuerySql.SqlSelectFieldItemDescriptor): FxSqlQuerySql.SqlSelectFieldItemDescriptor['as'] {
-	return sitem.as || sitem.a || sitem.alias
+	return sitem.as || sitem.a
 }
 
 export function autoIncreatementTableIndex (from: FxSqlQuerySql.SqlQueryChainDescriptor['from']) {
