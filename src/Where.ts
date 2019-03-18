@@ -47,41 +47,7 @@ function buildOrGroup(
 	opts = opts || {};
 
 	if (where.exists) {
-	/* start of deal with case `whereExists` */
-		const whereList = [];
-		const link_table = where.exists.table_linked;
-
-		/**
-		 * @example whereExists('table2', 'table1', [['fid1', 'fid2'], ['id1', 'id2']], { col1: 1, col2: 2 })
-		 */
-		if(Array.isArray(where.exists.link_info[0]) && Array.isArray(where.exists.link_info[1])) {
-			const col_tuple_for_aligning_from = where.exists.link_info[0];
-			const col_tuple_for_aligning_to = where.exists.link_info[1];
-			for (let i = 0; i < col_tuple_for_aligning_from.length; i++) {
-				whereList.push(Dialect.escapeId(col_tuple_for_aligning_from[i]) + " = " + Dialect.escapeId(link_table, col_tuple_for_aligning_to[i]));
-			}
-		} else {
-			const [table_from, table_to] = where.exists.link_info
-			/**
-			 * @example whereExists('table2', 'table1', ['fid', 'id'], { col1: 1, col2: 2 })
-			 */
-			if (table_from && table_to)
-				whereList.push(Dialect.escapeId(table_from) + " = " + Dialect.escapeId(link_table, table_to));
-		}
-
-		const exists_join_key = whereList.length ? " AND " : "";
-
-		return [
-			[
-				"EXISTS (" +
-				"SELECT * FROM " + Dialect.escapeId(where.exists.table) + " " +
-				"WHERE " + whereList.join(" AND "),
-
-				buildOrGroup(Dialect, { table: null, wheres: where.wheres }, opts) +
-				")"
-			].join(exists_join_key)
-		];
-	/* end of deal with case `whereExists` */
+		return buildExistsSqlFragments(Dialect, where, opts)
 	}
 
 	let query: string[] = [],
@@ -246,6 +212,48 @@ function buildOrGroup(
 	}
 
 	return query.join(" AND ");
+}
+
+function buildExistsSqlFragments (
+	Dialect: FxSqlQueryDialect.Dialect,
+	where: FxSqlQuerySubQuery.SubQueryBuildDescriptor,
+	opts: FxSqlQuery.ChainBuilderOptions
+) {
+	/* start of deal with case `whereExists` */
+	const whereList = [];
+	const link_table = where.exists.table_linked;
+
+	/**
+	 * @example whereExists('table2', 'table1', [['fid1', 'fid2'], ['id1', 'id2']], { col1: 1, col2: 2 })
+	 */
+	if(Array.isArray(where.exists.link_info[0]) && Array.isArray(where.exists.link_info[1])) {
+		const col_tuple_for_aligning_from = where.exists.link_info[0];
+		const col_tuple_for_aligning_to = where.exists.link_info[1];
+		for (let i = 0; i < col_tuple_for_aligning_from.length; i++) {
+			whereList.push(Dialect.escapeId(col_tuple_for_aligning_from[i]) + " = " + Dialect.escapeId(link_table, col_tuple_for_aligning_to[i]));
+		}
+	} else {
+		const [table_from, table_to] = where.exists.link_info
+		/**
+		 * @example whereExists('table2', 'table1', ['fid', 'id'], { col1: 1, col2: 2 })
+		 */
+		if (table_from && table_to)
+			whereList.push(Dialect.escapeId(table_from) + " = " + Dialect.escapeId(link_table, table_to));
+	}
+
+	const exists_join_key = whereList.length ? " AND " : "";
+
+	return [
+		[
+			"EXISTS (" +
+			"SELECT * FROM " + Dialect.escapeId(where.exists.table) + " " +
+			"WHERE " + whereList.join(" AND "),
+
+			buildOrGroup(Dialect, { table: null, wheres: where.wheres }, opts) +
+			")"
+		].join(exists_join_key)
+	];
+	/* end of deal with case `whereExists` */
 }
 
 function buildComparisonKey(Dialect: FxSqlQueryDialect.Dialect, table: string, column: string) {

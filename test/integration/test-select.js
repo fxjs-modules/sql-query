@@ -267,6 +267,15 @@ describe('select', () => {
       'SELECT `s`.`id` AS `stage_id`, `s`.`name`, `s`.`description`, COUNT(`t`.`id`) AS `count_task`, `p`.`id` AS `project_id`, `p`.`name`, `p`.`description` FROM ( `stage` `s` JOIN `task` `t` ON `t`.`of_stage_id` = `s`.`id` ) JOIN `project` `p` ON `p`.`id` = `s`.`project_id` GROUP BY `stage_id`'
     )
   })
+
+  it('from: error assertion', () => {
+    assert.throws(() => {
+      common.Select()
+        .from('table1 as custom_t1').select('id1', 'id2', 'name')
+        .from('table2 as custom_t2', [], 'table1', [])
+        .build()
+    })
+  })
 })
 
 if (require.main === module) {
