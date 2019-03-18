@@ -62,15 +62,14 @@ declare namespace FxSqlQuerySql {
 		table_linked: string
 	}
 
+	type SqlColumnDescriptorDataType = any
 	interface SqlColumnDescriptor {
-		data: any,
-		type?: {
-			(): string
-		}
+		data: SqlColumnDescriptorDataType,
+		type? (): string
 	}
 
 	type NormalizedSimpleSqlColumnType = string | '*'
-	type SqlColumnType = SqlColumnDescriptor[] | string[] | NormalizedSimpleSqlColumnType
+	type SqlColumnType = (SqlColumnDescriptor|string)[] | NormalizedSimpleSqlColumnType
 
 	// item to describe what columns to select
 	interface SqlSelectFieldItemDescriptor {
@@ -86,7 +85,9 @@ declare namespace FxSqlQuerySql {
 		// pure sql
 		sql?: string
 
+		// GUESS: useful when this object refer to one complex descriptor?
 		select?: string
+		// having sub query statement
 		having?: string
 	}
 	// @deprecated, use `SqlSelectFieldItemDescriptor` instead
@@ -95,7 +96,7 @@ declare namespace FxSqlQuerySql {
 	interface SqlSelectFieldsGenerator {
 		(dialect: FxSqlQueryDialect.Dialect): string
 	}
-	type SqlSelectFieldsType = SqlSelectFieldItemDescriptor | SqlSelectFieldsGenerator
+	type SqlSelectFieldsType = SqlFragmentStr | SqlSelectFieldItemDescriptor | SqlSelectFieldsGenerator
 
 	interface QueryFromDescriptorOpts {
 		joinType: string
@@ -105,7 +106,7 @@ declare namespace FxSqlQuerySql {
 		// table
 		table: string
 		// table alias
-		a?: string, alias: string
+		alias: string, a?: string
 		// ?
 		joins?: QueryFromJoinTupleDescriptor[]
 		// selected fields

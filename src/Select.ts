@@ -59,12 +59,12 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 	select (fields?: any) {
 		if (fields) {
-			if (!this.sql.from[this.sql.from.length - 1].select) {
-				this.sql.from[this.sql.from.length - 1].select = [];
-			}
-			const select = this.sql.from[this.sql.from.length - 1].select as FxSqlQuerySql.SqlSelectFieldItemDescriptor[]
+			const from_descriptor = this.sql.from[this.sql.from.length - 1];
 
-			this.sql.from[this.sql.from.length - 1].select = select.concat(
+			if (!from_descriptor.select || !Array.isArray(from_descriptor.select)) {
+				from_descriptor.select = [];
+			}
+			this.sql.from[this.sql.from.length - 1].select = from_descriptor.select.concat(
 				Array.isArray(fields)
 					? fields
 					: Array.prototype.slice.apply(arguments)
@@ -78,6 +78,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 		return this;
 	}
+
 	as (_as: string) {
 		var idx = this.sql.from.length - 1;
 
@@ -94,6 +95,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 		return this;
 	}
+
 	fun (fun: string, column?: FxSqlQuerySql.SqlColumnType, _as?: string) {
 		if (!Array.isArray(this.sql.from[this.sql.from.length - 1].select)) {
 			this.sql.from[this.sql.from.length - 1].select = [];
@@ -108,19 +110,26 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		this.fun_stack = [];
 		return this;
 	}
+
+	/**
+	 *
+	 * @param table from-table
+	 * @param from_id from-table id(s), align with to_id
+	 * @param to_table to table
+	 * @param to_id to-table id(s), align with from_id
+	 * @param from_opts join descriptor
+	 */
 	from (
 		table: FxSqlQuerySql.SqlTableInputType,
 		from_id?: FxSqlQueryHelpler.Arraiable<string>,
 		to_table?: string,
 		to_id?: FxSqlQueryHelpler.Arraiable<string>,
-		fromOpts?: FxSqlQuerySql.QueryFromDescriptorOpts
+		from_opts?: FxSqlQuerySql.QueryFromDescriptorOpts
 	): this {
-		let [table_name, table_alias] = Helpers.parseTableInputStr(table)
+		const [table_name, table_alias] = Helpers.parseTableInputStr(table)
 
-		var from: FxSqlQuerySql.QueryFromDescriptor = {
-			// table
+		const from: FxSqlQuerySql.QueryFromDescriptor = {
 			table: table_name,
-			// alias
 			alias: table_alias || Helpers.defaultTableAliasNameRule( Helpers.autoIncreatementTableIndex(this.sql.from) )
 		};
 
@@ -129,64 +138,65 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			return this;
 		}
 
-		var alias: string;
+		let alias: string;
 
-		var args = Array.prototype.slice.call(arguments);
-		var last = args[args.length - 1];
+		const args = Array.prototype.slice.call(arguments);
+		const last = args[args.length - 1];
 
 		if (typeof last == 'object' && !Array.isArray(last)) {
-			fromOpts = args.pop()
-			from.opts = fromOpts;
+			from_opts = args.pop()
+			from.opts = from_opts;
 		}
 
 		if (args.length == 3) {
 			alias = Helpers.pickAliasFromFromDescriptor(this.sql.from[this.sql.from.length - 1]);
 			to_id = to_table;
 		} else { // expect args.length === 4
-			let [to_table_name, to_table_alias] = Helpers.parseTableInputStr(to_table)
+			const [to_table_name, to_table_alias] = Helpers.parseTableInputStr(to_table)
 			alias = to_table_alias || get_table_alias(this.sql, to_table_name);
 		}
 
 		from.joins = [];
-		if (from_id.length && to_id.length) {
-			/**
-			 * expect
-			 * ```
-			 * 	.from(
-			 * 		['from_table_c1', 'from_table_c2', 'from_table_c3', ...],
-			 * 		'totable',
-			 * 		['to_table_c1', 'to_table_c2', 'to_table_c3', ...],
-			 * 	)
-			 * ```
-			 */
-			if (Array.isArray(from_id) && Array.isArray(to_id) && from_id.length == to_id.length) {
-				for (let i = 0; i < from_id.length; i++) {
-					from.joins.push([
-						from_id[i],
-						alias,
-						to_id[i]
-					]);
-				}
-			} else {
-				/**
-				 * expect
-				 * ```
-				 * 	.from('from_table_c1', 'totable', 'to_table_c1')
-				 * ```
-				 */
+		if (!from_id.length || !to_id.length)
+			throw new Error('[SQL-QUERY] both from_id & to_id cannot be empty!');
+
+		/**
+		 * expect
+		 * ```
+		 * 	.from(
+		 * 		'fromtable',
+		 * 		['from_table_c1', 'from_table_c2', 'from_table_c3', ...],
+		 * 		'totable',
+		 * 		['to_table_c1', 'to_table_c2', 'to_table_c3', ...],
+		 * 	)
+		 * ```
+		 */
+		if (Array.isArray(from_id) && Array.isArray(to_id) && from_id.length == to_id.length) {
+			for (let i = 0; i < from_id.length; i++) {
 				from.joins.push([
-					from_id as string,
+					from_id[i],
 					alias,
-					to_id as string
+					to_id[i]
 				]);
 			}
 		} else {
-			throw new Error();
+			/**
+			 * expect
+			 * ```
+			 * 	.from('fromtable', from_table_c1', 'totable', 'to_table_c1')
+			 * ```
+			 */
+			from.joins.push([
+				from_id as string,
+				alias,
+				to_id as string
+			]);
 		}
 
 		this.sql.from.push(from);
 		return this;
 	}
+
 	where (
 		...whereConditions: (
 			FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'] | FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0]
@@ -239,6 +249,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 		return this;
 	}
+
 	whereExists (table: string, table_link: string, link: FxSqlQuerySql.WhereExistsLinkTuple, cond: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres']) {
 		this.sql.where.push({
 			table: (this.sql.from.length ? Helpers.pickAliasFromFromDescriptor(this.sql.from[this.sql.from.length - 1]) : null),
@@ -248,18 +259,22 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		this.sql.where_exists = true;
 		return this;
 	}
+
 	groupBy (...args: FxSqlQuerySql.SqlGroupByType[]) {
 		this.sql.group_by = args;
 		return this;
 	}
+
 	offset (offset: number) {
 		this.sql.offset = offset;
 		return this;
 	}
+
 	limit (limit: number) {
 		this.sql.limit = limit;
 		return this;
 	}
+
 	order (column: FxSqlQuery.OrderNormalizedResult[0], dir?: FxSqlQuery.OrderNormalizedResult[1]) {
 		// sql type tuple
 		if (Array.isArray(dir)) {
@@ -282,13 +297,16 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		}
 		return this;
 	}
+
 	build () {
-		var query: string[] = [],
-			tmp: string[] = [],
+		let query: string[] = [],
+			sqlfragment_collector: string[] = [],
 			_from,
-			ord,
-			str;
-		var having = [];
+			ord;
+
+		const having: string[] = [];
+
+		const sql_from = this.sql.from;
 
 		if (this.fun_stack.length) {
 			this.fun(this.fun_stack.pop());
@@ -301,115 +319,41 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			query.push("TOP " + this.sql.limit);
 		}
 
-		for (let i = 0; i < this.sql.from.length; i++) {
-			this.sql.from[i].alias = Helpers.pickAliasFromFromDescriptor(this.sql.from[i]) || Helpers.defaultTableAliasNameRule(i + 1);
+		for (let i = 0; i < sql_from.length; i++) {
+			sql_from[i].alias = Helpers.pickAliasFromFromDescriptor(sql_from[i]) || Helpers.defaultTableAliasNameRule(i + 1);
 		}
 
-		const sql_from = this.sql.from
+
+		const single_query = sql_from.length === 1;
 		for (let i = 0; i < sql_from.length; i++) {
 			if (!sql_from[i].select) continue;
 
-			const sql_select = sql_from[i].select as FxSqlQuerySql.SqlSelectFieldItemDescriptor[] | string
-
 			for (let j = 0; j < sql_from[i].select.length; j++) {
-				if (typeof sql_select[j] == "string" ) {
-					const sql_select_string = sql_select[j] as string
+				const sql_select_item = sql_from[i].select[j]
 
-					if (sql_from.length == 1) {
-						tmp.push(this.Dialect.escapeId(sql_select_string));
-					} else {
-						tmp.push(this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(sql_from[i]), sql_select_string));
-					}
+				if (typeof sql_select_item == "string" ) {
+					buildStringTypeSelectItem.apply(this, [
+						sqlfragment_collector,
+						sql_select_item,
+						single_query,
+						Helpers.pickAliasFromFromDescriptor(sql_from[i])
+					])
+					continue;
+				} else if (typeof sql_select_item == "object") {
+					const {should_continue} = buildObjectTypeSelectItem.apply(this, [
+						sqlfragment_collector,
+						sql_select_item,
+						single_query,
+						Helpers.pickAliasFromFromDescriptor(sql_from[i]),
+						having
+					]);
+
+					if (should_continue)
+						continue ;
+				} else if (typeof sql_select_item == "function") {
+					sqlfragment_collector.push(sql_select_item(this.Dialect));
 					continue;
 				}
-
-				const sql_select_obj = sql_select[j] as FxSqlQuerySql.SqlSelectFieldItemDescriptor
-				if (typeof sql_select[j] == "object") {
-					if (!sql_select_obj.func_name && sql_select_obj.column_name) {
-						if (sql_from.length == 1) {
-							tmp.push(
-								this.Dialect.escapeId(sql_select_obj.column_name as FxSqlQuerySql.SqlFragmentStr)
-							);
-						} else {
-							tmp.push(
-								this.Dialect.escapeId(
-									Helpers.pickAliasFromFromDescriptor(sql_from[i]),
-									sql_select_obj.column_name as FxSqlQuerySql.SqlFragmentStr
-								)
-							);
-						}
-						const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj)
-						if (_as) {
-							tmp[tmp.length - 1] += " AS " + this.Dialect.escapeId(_as as FxSqlQuerySql.NormalizedSimpleSqlColumnType);
-						}
-					}
-					if (sql_select_obj.having) {
-						having.push(this.Dialect.escapeId(sql_select_obj.having));
-					}
-					if (sql_select_obj.select) {
-						tmp.push(this.Dialect.escapeId(sql_select_obj.select));
-						continue;
-					}
-				}
-
-				if (typeof sql_select[j] == "function") {
-					const sql_select_func = sql_from[i].select[j] as FxSqlQuerySql.SqlSelectFieldsGenerator
-
-					tmp.push(sql_select_func(this.Dialect));
-					continue;
-				}
-
-				str = sql_select_obj.func_name + "(";
-
-				if (sql_select_obj.func_name) {
-					str = sql_select_obj.func_name + "(";
-
-					if (sql_select_obj.column_name && !Array.isArray(sql_select_obj.column_name)) {
-						sql_select_obj.column_name = [ sql_select_obj.column_name as string ];
-					}
-
-					if (Array.isArray(sql_select_obj.column_name)) {
-						const column_descriptors = sql_select_obj.column_name as FxSqlQuerySql.SqlColumnDescriptor[]
-						str += column_descriptors.map((el: FxSqlQuerySql.SqlColumnDescriptor) => {
-							if (!el) {
-								return this.Dialect.escapeVal(el as null);
-							}
-							if (typeof el.type == "function") {
-								switch (el.type()) {
-									case "text":
-										return this.Dialect.escapeVal(el.data, this.opts.timezone);
-									default:
-										return el;
-								}
-							}
-							if (typeof el != "string") {
-								return el;
-							}
-							if (sql_from.length == 1) {
-								return this.Dialect.escapeId(el);
-							} else {
-								return this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(sql_from[i]), el);
-							}
-						}).join(", ");
-					} else {
-						str += "*";
-					}
-					str += ")";
-				} else if (sql_select_obj.sql) {
-					str = '(' + sql_select_obj.sql + ')';
-				} else {
-					continue;
-				}
-
-				const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj);
-				str += (_as ? " AS " + this.Dialect.escapeId(_as as FxSqlQuerySql.NormalizedSimpleSqlColumnType) : "");
-
-				if (sql_select_obj.func_stack && sql_select_obj.func_stack.length > 0) {
-					str = sql_select_obj.func_stack.join("(") + "(" + str +
-						((new Array(sql_select_obj.func_stack.length + 1)).join(")"));
-				}
-
-				tmp.push(str);
 			}
 		}
 
@@ -418,8 +362,8 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			query.push("SQL_CALC_FOUND_ROWS");
 		}
 
-		if (tmp.length) {
-			query.push(tmp.join(", "));
+		if (sqlfragment_collector.length) {
+			query.push(sqlfragment_collector.join(", "));
 		} else {
 			query.push("*");
 		}
@@ -431,6 +375,8 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 				query.push((new Array(sql_from.length - 1)).join("("));
 			}
 
+			const single_query = sql_from.length == 1 && !this.sql.where_exists;
+
 			for (let i = 0; i < sql_from.length; i++) {
 				_from = sql_from[i];
 
@@ -440,24 +386,17 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 					}
 					query.push("JOIN");
 				}
-				if (sql_from.length == 1 && !this.sql.where_exists) {
+
+				if (single_query) {
 					query.push(this.Dialect.escapeId(_from.table));
 				} else {
 					query.push(this.Dialect.escapeId(_from.table) + " " + this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(_from)));
 				}
+
 				if (i > 0) {
 					query.push("ON");
 
-					for (let ii = 0; ii < _from.joins.length; ii++) {
-						if (ii > 0) {
-							query.push("AND");
-						}
-						query.push(
-							this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(_from), _from.joins[ii][0]) +
-							" = " +
-							this.Dialect.escapeId(_from.joins[ii][1], _from.joins[ii][2])
-						);
-					}
+					buildJoinOn.apply(this, [query, _from]);
 
 					if (i < sql_from.length - 1) {
 						query.push(")");
@@ -475,7 +414,6 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		query = query.concat(
 			Where.build(
 				this.Dialect,
-				// at this time, this.sql.where has been normalized, it must be `FxSqlQuerySubQuery.SubQueryBuildDescriptor[]`
 				this.sql.where,
 				this.opts
 			)
@@ -494,23 +432,23 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 		// order
 		if (this.sql.order.length > 0) {
-			tmp = [];
+			sqlfragment_collector = [];
 			for (let i = 0; i < this.sql.order.length; i++) {
 				ord = this.sql.order[i];
 
 				if (typeof ord == 'object') {
 					if (Array.isArray(ord.c)) {
-						tmp.push(this.Dialect.escapeId.apply(this.Dialect, ord.c) + " " + ord.d);
+						sqlfragment_collector.push(this.Dialect.escapeId.apply(this.Dialect, ord.c) + " " + ord.d);
 					} else {
-						tmp.push(this.Dialect.escapeId(ord.c) + " " + ord.d);
+						sqlfragment_collector.push(this.Dialect.escapeId(ord.c) + " " + ord.d);
 					}
 				} else if (typeof ord == 'string') {
-					tmp.push(ord);
+					sqlfragment_collector.push(ord);
 				}
 			}
 
-			if (tmp.length > 0) {
-				query.push("ORDER BY " + tmp.join(", "));
+			if (sqlfragment_collector.length > 0) {
+				query.push("ORDER BY " + sqlfragment_collector.join(", "));
 			}
 		}
 
@@ -556,4 +494,138 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	sum (...args: any[]) { return this.get_aggregate_fun('SUM')(...args) }
 	count (...args: any[]) { return this.get_aggregate_fun('COUNT')(...args) }
 	distinct (...args: any[]) { return this.get_aggregate_fun('DISTINCT')(...args) }
+}
+
+function buildJoinOn (
+	this: FxSqlQuery.ChainBuilder__Select,
+	query: string[], _from: FxSqlQuerySql.QueryFromDescriptor
+) {
+	for (let ii = 0; ii < _from.joins.length; ii++) {
+		if (ii > 0) {
+			query.push("AND");
+		}
+		query.push(
+			this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(_from), _from.joins[ii][0]) +
+			" = " +
+			this.Dialect.escapeId(_from.joins[ii][1], _from.joins[ii][2])
+		);
+	}
+}
+
+function buildStringTypeSelectItem (
+	this: FxSqlQuery.ChainBuilder__Select,
+	sql_fragment_collector: string[],
+	sql_select_item: string,
+	single_query: boolean,
+	alias: string
+) {
+	if (single_query) {
+		sql_fragment_collector.push(this.Dialect.escapeId(sql_select_item));
+	} else {
+		sql_fragment_collector.push(this.Dialect.escapeId(alias, sql_select_item));
+	}
+}
+
+function buildObjectTypeSelectItem (
+	this: FxSqlQuery.ChainBuilder__Select,
+	sql_fragment_collector: string[],
+	sql_select_obj: FxSqlQuerySql.SqlSelectFieldItemDescriptor,
+	single_query: boolean,
+	alias: string,
+	having: string[]
+): {
+	should_continue: boolean,
+	return_value: string
+} {
+	const return_wrapper = {
+		should_continue: false,
+		return_value: ''
+	};
+
+	let str;
+
+	if (!sql_select_obj.func_name && sql_select_obj.column_name) {
+		if (single_query) {
+			sql_fragment_collector.push(
+				this.Dialect.escapeId(sql_select_obj.column_name as FxSqlQuerySql.SqlFragmentStr)
+			);
+		} else {
+			sql_fragment_collector.push(
+				this.Dialect.escapeId(
+					alias,
+					sql_select_obj.column_name as FxSqlQuerySql.SqlFragmentStr
+				)
+			);
+		}
+		const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj)
+		if (_as) {
+			sql_fragment_collector[sql_fragment_collector.length - 1] += " AS " + this.Dialect.escapeId(_as as FxSqlQuerySql.NormalizedSimpleSqlColumnType);
+		}
+	}
+
+	if (sql_select_obj.having) {
+		having.push(this.Dialect.escapeId(sql_select_obj.having));
+	}
+
+	if (sql_select_obj.select) {
+		sql_fragment_collector.push(this.Dialect.escapeId(sql_select_obj.select));
+
+		return_wrapper.should_continue = true;
+		return return_wrapper;
+	}
+
+	if (sql_select_obj.func_name) {
+		str = sql_select_obj.func_name + "(";
+
+		if (sql_select_obj.column_name && !Array.isArray(sql_select_obj.column_name)) {
+			sql_select_obj.column_name = [ sql_select_obj.column_name as string ];
+		}
+
+		const column_descriptors = sql_select_obj.column_name
+		if (Array.isArray(column_descriptors)) {
+			str += column_descriptors.map((col_desc) => {
+				if (!col_desc) {
+					return this.Dialect.escapeVal(col_desc);
+				}
+
+				/* when col_desc is type:SqlColumnDescriptor */
+				if (typeof col_desc === 'object' && typeof col_desc.type === "function") {
+					switch (col_desc.type()) {
+						case "text":
+							return this.Dialect.escapeVal(col_desc.data, this.opts.timezone);
+						default:
+							return col_desc;
+					}
+				} else if (typeof col_desc !== "string") {
+					return col_desc;
+				}
+
+				if (single_query) {
+					return this.Dialect.escapeId(col_desc);
+				} else {
+					return this.Dialect.escapeId(alias, col_desc);
+				}
+			}).join(", ");
+		} else {
+			str += "*";
+		}
+		str += ")";
+	} else if (sql_select_obj.sql) {
+		str = '(' + sql_select_obj.sql + ')';
+	} else {
+		return_wrapper.should_continue = true;
+		return return_wrapper;
+	}
+
+	const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj);
+	str += _as ? " AS " + this.Dialect.escapeId(_as) : "";
+
+	if (sql_select_obj.func_stack && sql_select_obj.func_stack.length > 0) {
+		str = sql_select_obj.func_stack.join("(") + "(" + str +
+				Array(sql_select_obj.func_stack.length + 1).join(")");
+	}
+
+	sql_fragment_collector.push(str);
+
+	return return_wrapper;
 }
