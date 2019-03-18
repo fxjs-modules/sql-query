@@ -44,15 +44,15 @@ declare namespace FxSqlQuery {
 		 * .where({col1: 'v1', col1: 'v1'})
 		 * .where(not: [ { col: 2 }, { col: 3 } ])
 		 */
-		where: (...whereConditions: (FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'] | FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0])[]) => this
+		where: (...whereConditions: (FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'] | FxSqlQuerySubQuery.WhereExistsTuple_Flatten[0])[]) => this
 		whereExists: (
 			table: string,
 			table_link: string,
 			link: FxSqlQuerySql.WhereExistsLinkTuple,
-			cond: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']
+			cond: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres']
 		) => this
 		groupBy: (...args: FxSqlQuerySql.SqlGroupByType[]) => this
-		fun: (fun: string, column?: FxSqlQuerySql.SqlColumnType, alias?: string) => this
+		fun: (fun: string, column?: FxSqlQuerySql.SqlColumnType, _as?: string) => this
 		from: {
 			/**
 			 * @warning can be only used in first call!
@@ -90,7 +90,7 @@ declare namespace FxSqlQuery {
 	}
 
 	interface ChainBuilder__Update extends ChainBuilder {
-		where: (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) => ChainBuilder__Update
+		where: (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'][]) => ChainBuilder__Update
 		into(table: string): this | ChainBuilder__Update
 		set(values: FxSqlQuerySql.DataToSet): this | ChainBuilder__Update
 	}
@@ -99,7 +99,7 @@ declare namespace FxSqlQuery {
 		extends ChainBuilder, ChainBuilderPaginationMixin
 	{
 		order(column: string, dir: QueryOrderDirection): this
-		where: (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) => this
+		where: (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'][]) => this
 		from(table: string): this
 	}
 }

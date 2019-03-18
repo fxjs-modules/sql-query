@@ -55,11 +55,11 @@ declare namespace FxSqlQuerySql {
 
 	interface QueryWhereExtendItem {
 		// table
-		t: string
+		table: string
 		// link
-		l: FxSqlQueryHelpler.Arraiable<any>
+		link_info: FxSqlQueryHelpler.Arraiable<any>
 		// table linked
-		tl: string
+		table_linked: string
 	}
 
 	interface SqlColumnDescriptor {
@@ -72,28 +72,30 @@ declare namespace FxSqlQuerySql {
 	type NormalizedSimpleSqlColumnType = string | '*'
 	type SqlColumnType = SqlColumnDescriptor[] | string[] | NormalizedSimpleSqlColumnType
 
-	interface SqlSelectFieldsDescriptor {
+	// item to describe what columns to select
+	interface SqlSelectFieldItemDescriptor {
 		// fun name
-		f?: string
+		func_name?: string
 		// column name
-		c?: SqlColumnType
-		// table alias
-		alias?: string
-		// args to describe what columns to select
-		a?: FxSqlQuerySql.SqlColumnType
+		column_name?: SqlColumnType
+		// column as
+		as?: FxSqlQuerySql.NormalizedSimpleSqlColumnType,
+		a?: SqlSelectFieldItemDescriptor['as'],
 		// fun_stack
-		s?: FxSqlQuery.SupportedAggregationFunction[]
+		func_stack?: FxSqlQuery.SupportedAggregationFunction[]
 		// pure sql
 		sql?: string
 
 		select?: string
 		having?: string
 	}
+	// @deprecated, use `SqlSelectFieldItemDescriptor` instead
+	type SqlSelectFieldsDescriptor = SqlSelectFieldItemDescriptor
 
 	interface SqlSelectFieldsGenerator {
 		(dialect: FxSqlQueryDialect.Dialect): string
 	}
-	type SqlSelectFieldsType = SqlSelectFieldsDescriptor | SqlSelectFieldsGenerator
+	type SqlSelectFieldsType = SqlSelectFieldItemDescriptor | SqlSelectFieldsGenerator
 
 	interface QueryFromDescriptorOpts {
 		joinType: string
@@ -101,11 +103,11 @@ declare namespace FxSqlQuerySql {
 
 	interface QueryFromDescriptor {
 		// table
-		t: string
+		table: string
 		// table alias
-		a: string
+		a?: string, alias: string
 		// ?
-		j?: QueryFromJoinTupleDescriptor[]
+		joins?: QueryFromJoinTupleDescriptor[]
 		// selected fields
 		select?: SqlSelectFieldsType[]
 		// from opts

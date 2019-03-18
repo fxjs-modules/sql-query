@@ -49,6 +49,13 @@ describe('select', () => {
     )
 
     assert.equal(
+      common.Select().from('table1').select(
+        ['abc', 'def', { as: 'ghi', sql: 'SOMEFUNC(ghi)' }]
+      ).build(),
+      'SELECT `abc`, `def`, (SOMEFUNC(ghi)) AS `ghi` FROM `table1`'
+    )
+
+    assert.equal(
       common.Select().calculateFoundRows().from('table1').build(),
       'SELECT SQL_CALC_FOUND_ROWS * FROM `table1`'
     )
@@ -255,7 +262,7 @@ describe('select', () => {
         .from('stage s').select('id').as('stage_id').select('name', 'description')
         .from('task t', 'of_stage_id', 'stage', 'id').count('id', 'count_task')
         .from('project p', 'id', 's', 'project_id').select('id').as('project_id').select('name', 'description')
-		.groupBy('stage_id')
+        .groupBy('stage_id')
         .build(),
       'SELECT `s`.`id` AS `stage_id`, `s`.`name`, `s`.`description`, COUNT(`t`.`id`) AS `count_task`, `p`.`id` AS `project_id`, `p`.`name`, `p`.`description` FROM ( `stage` `s` JOIN `task` `t` ON `t`.`of_stage_id` = `s`.`id` ) JOIN `project` `p` ON `p`.`id` = `s`.`project_id` GROUP BY `stage_id`'
     )

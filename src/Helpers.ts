@@ -72,8 +72,8 @@ export function get_table_alias (
 	sql: FxSqlQuerySql.SqlQueryChainDescriptor, table: string
 ): string {
 	for (let i = 0; i < sql.from.length; i++) {
-		if (sql.from[i].t == table) {
-			return sql.from[i].a;
+		if (sql.from[i].table == table) {
+			return pickAliasFromFromDescriptor(sql.from[i]);
 		}
 	}
 	return table;
@@ -110,6 +110,14 @@ export const parseTableInputStr: FxSqlQueryHelpler.HelperModule['parseTableInput
 	}
 
 	return ta_tuple
+}
+
+export function pickAliasFromFromDescriptor(fd: FxSqlQuerySql.QueryFromDescriptor) {
+	return fd.alias || fd.a
+}
+
+export function pickColumnAsFromSelectFieldsDescriptor(sitem: FxSqlQuerySql.SqlSelectFieldItemDescriptor): FxSqlQuerySql.SqlSelectFieldItemDescriptor['as'] {
+	return sitem.as || sitem.a || sitem.alias
 }
 
 export function autoIncreatementTableIndex (from: FxSqlQuerySql.SqlQueryChainDescriptor['from']) {

@@ -1,7 +1,7 @@
 declare namespace FxSqlQuerySubQuery {
 	interface SubQueryBuildDescriptor {
 		// table name or its alias name
-		t: string
+		table: string
 		// where conditions
 		/**
 		 * there may be 3 kinds of normalized key-value:
@@ -10,14 +10,14 @@ declare namespace FxSqlQuerySubQuery {
 		 * - FxSqlQueryComparator.QueryComparatorObject
 		 * - FxSqlQueryComparator.QueryComparatorLiteralObject
 		 */
-		w: {
+		wheres: {
 			[k: string]: ConjunctionInputValue | NonConjunctionInputValue
 		}
 		// exists query info
-		e?: FxSqlQuerySql.QueryWhereExtendItem
+		exists?: FxSqlQuerySql.QueryWhereExtendItem
 	}
 
-	type SubQueryConditions = SubQueryBuildDescriptor['w']
+	type SubQueryConditions = SubQueryBuildDescriptor['wheres']
 
 	// {'__sql': [..., ?[...]]}
 	type UnderscoreSqlInput = [FxSqlQuerySql.SqlAssignmentTuple]
