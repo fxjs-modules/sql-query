@@ -148,6 +148,11 @@ sqlSelect
 
 sqlSelect
   .from('table1')
+  .select(['abc','def', { as: 'ghi', sql: 'SOMEFUNC(ghi)' }])
+  .build();
+
+sqlSelect
+  .from('table1')
   .select(['abc','def', { a: 'ghi', sql: 'SOMEFUNC(ghi)' }])
   .build();
 

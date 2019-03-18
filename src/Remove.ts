@@ -13,11 +13,11 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		this.sql.table = table;
 		return this;
 	}
-	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) {
+	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'][]) {
 		for (let i = 0; i < whereConditions.length; i++) {
 			this.sql.where.push({
-				t: null,
-				w: whereConditions[i]
+				table: null,
+				wheres: whereConditions[i]
 			});
 		}
 		return this;

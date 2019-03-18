@@ -46,22 +46,22 @@ function buildOrGroup(
 ): FxSqlQuerySql.SqlFragmentStr[] | FxSqlQuerySql.SqlResultStr | false {
 	opts = opts || {};
 
-	if (where.e) {
+	if (where.exists) {
 	/* start of deal with case `whereExists` */
 		const whereList = [];
-		const link_table = where.e.tl;
+		const link_table = where.exists.table_linked;
 
 		/**
 		 * @example whereExists('table2', 'table1', [['fid1', 'fid2'], ['id1', 'id2']], { col1: 1, col2: 2 })
 		 */
-		if(Array.isArray(where.e.l[0]) && Array.isArray(where.e.l[1])) {
-			const col_tuple_for_aligning_from = where.e.l[0];
-			const col_tuple_for_aligning_to = where.e.l[1];
+		if(Array.isArray(where.exists.link_info[0]) && Array.isArray(where.exists.link_info[1])) {
+			const col_tuple_for_aligning_from = where.exists.link_info[0];
+			const col_tuple_for_aligning_to = where.exists.link_info[1];
 			for (let i = 0; i < col_tuple_for_aligning_from.length; i++) {
 				whereList.push(Dialect.escapeId(col_tuple_for_aligning_from[i]) + " = " + Dialect.escapeId(link_table, col_tuple_for_aligning_to[i]));
 			}
 		} else {
-			const [table_from, table_to] = where.e.l
+			const [table_from, table_to] = where.exists.link_info
 			/**
 			 * @example whereExists('table2', 'table1', ['fid', 'id'], { col1: 1, col2: 2 })
 			 */
@@ -74,10 +74,10 @@ function buildOrGroup(
 		return [
 			[
 				"EXISTS (" +
-				"SELECT * FROM " + Dialect.escapeId(where.e.t) + " " +
+				"SELECT * FROM " + Dialect.escapeId(where.exists.table) + " " +
 				"WHERE " + whereList.join(" AND "),
 
-				buildOrGroup(Dialect, { t: null, w: where.w }, opts) +
+				buildOrGroup(Dialect, { table: null, wheres: where.wheres }, opts) +
 				")"
 			].join(exists_join_key)
 		];
@@ -88,11 +88,11 @@ function buildOrGroup(
 		op: FxSqlQueryComparator.QueryComparatorType,
 		transformed_result_op: string = op;
 
-	for (let k in where.w) {
-		let where_conditem_value = where.w[k];
+	for (let k in where.wheres) {
+		let where_conditem_value = where.wheres[k];
 		if (where_conditem_value === null || where_conditem_value === undefined) {
 			query.push(
-				buildComparisonKey(Dialect, where.t, k) +
+				buildComparisonKey(Dialect, where.table, k) +
 				" IS NULL"
 			);
 			continue;
@@ -109,7 +109,7 @@ function buildOrGroup(
 				const conj_c = where_conditem_value[j]
 				q = buildOrGroup(
 					Dialect,
-					{ t: where.t, w: conj_c },
+					{ table: where.table, wheres: conj_c },
 					opts
 				);
 				if (q !== false) {
@@ -124,7 +124,7 @@ function buildOrGroup(
 		}
 
 		let non_conj_where_conditem_value: FxSqlQuerySubQuery.NonConjunctionInputValue
-			= transformSqlComparatorLiteralObject(where_conditem_value, k, where.w) || where_conditem_value;
+			= transformSqlComparatorLiteralObject(where_conditem_value, k, where.wheres) || where_conditem_value;
 
 		if (isSqlComparatorPayload(non_conj_where_conditem_value)) {
 			op = non_conj_where_conditem_value.sql_comparator();
@@ -132,7 +132,7 @@ function buildOrGroup(
 			switch (op) {
 				case "between":
 					query.push(
-						buildComparisonKey(Dialect, where.t, k) +
+						buildComparisonKey(Dialect, where.table, k) +
 						" BETWEEN " +
 						Dialect.escapeVal(non_conj_where_conditem_value.from, opts.timezone) +
 						" AND " +
@@ -141,7 +141,7 @@ function buildOrGroup(
 					break;
 				case "not_between":
 					query.push(
-						buildComparisonKey(Dialect, where.t, k) +
+						buildComparisonKey(Dialect, where.table, k) +
 						" NOT BETWEEN " +
 						Dialect.escapeVal(non_conj_where_conditem_value.from, opts.timezone) +
 						" AND " +
@@ -150,14 +150,14 @@ function buildOrGroup(
 					break;
 				case "like":
 					query.push(
-						buildComparisonKey(Dialect, where.t, k) +
+						buildComparisonKey(Dialect, where.table, k) +
 						" LIKE " +
 						Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone)
 					);
 					break;
 				case "not_like":
 					query.push(
-						buildComparisonKey(Dialect, where.t, k) +
+						buildComparisonKey(Dialect, where.table, k) +
 						" NOT LIKE " +
 						Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone)
 					);
@@ -183,7 +183,7 @@ function buildOrGroup(
 
 					if (!isInStyleOperator(op, non_conj_where_conditem_value))
 						query.push(
-							buildComparisonKey(Dialect, where.t, k) +
+							buildComparisonKey(Dialect, where.table, k) +
 							" " + transformed_result_op + " " +
 							Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone)
 						);
@@ -195,7 +195,7 @@ function buildOrGroup(
 					break;
 				// case "sql":
 				// 	if (typeof non_conj_where_conditem_value.where == "object") {
-				// 		var sql = non_conj_where_conditem_value.where.str.replace("?:column", buildComparisonKey(Dialect, where.t, k));
+				// 		var sql = non_conj_where_conditem_value.where.str.replace("?:column", buildComparisonKey(Dialect, where.table, k));
 
 				// 		sql = sql.replace(/\?:(id|value)/g, function (m) {
 				// 			if (non_conj_where_conditem_value.where.escapes.length === 0) {
@@ -236,7 +236,7 @@ function buildOrGroup(
 				);
 			} else {
 				const normal_kv = non_conj_where_conditem_value as any
-				query.push(buildComparisonKey(Dialect, where.t, k) + " = " + Dialect.escapeVal(normal_kv, opts.timezone));
+				query.push(buildComparisonKey(Dialect, where.table, k) + " = " + Dialect.escapeVal(normal_kv, opts.timezone));
 			}
 		}
 	}
@@ -271,7 +271,7 @@ function isSqlComparatorPayload (
 function transformSqlComparatorLiteralObject (
 	non_special_kv: FxSqlQuerySubQuery.NonConjunctionInputValue,
 	payload_k: string,
-	payload: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w']
+	payload: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres']
 ): false | FxSqlQueryComparator.QueryComparatorObject {
 	if (typeof non_special_kv !== 'object') return false;
 
@@ -313,14 +313,14 @@ function transformSqlComparatorLiteralObject (
 
 function isConjunctionWhereConditionInput (
 	k: string,
-	where_conditem_value: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][string]
+	where_conditem_value: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'][string]
 ): where_conditem_value is FxSqlQuerySubQuery.ConjunctionInputValue {
 	return WHERE_CONJUNCTIONS.indexOf(k) >= 0;
 }
 
 function isUnderscoreSqlInput (
 	k: string,
-	where_conditem_value: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][string]
+	where_conditem_value: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'][string]
 ): where_conditem_value is FxSqlQuerySubQuery.UnderscoreSqlInput {
 	return k === '__sql';
 }
@@ -346,7 +346,7 @@ function processInStyleWhereConditionInput (
 		query.push('FALSE');
 	} else {
 		query.push(
-			`${buildComparisonKey(Dialect, where.t, k)} ${transformed_result_op} ${Dialect.escapeVal(val_in_detailed_query_condition, opts.timezone)}`
+			`${buildComparisonKey(Dialect, where.table, k)} ${transformed_result_op} ${Dialect.escapeVal(val_in_detailed_query_condition, opts.timezone)}`
 		);
 	}
 }

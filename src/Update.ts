@@ -18,11 +18,11 @@ export class UpdateQuery implements FxSqlQuery.ChainBuilder__Update {
 		this.sql.set = values;
 		return this;
 	}
-	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['w'][]) {
+	where (...whereConditions: FxSqlQuerySubQuery.SubQueryBuildDescriptor['wheres'][]) {
 		for (let i = 0; i < whereConditions.length; i++) {
 			this.sql.where.push({
-				t: null,
-				w: whereConditions[i]
+				table: null,
+				wheres: whereConditions[i]
 			});
 		}
 		return this;
