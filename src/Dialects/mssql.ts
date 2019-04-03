@@ -81,6 +81,7 @@ const Dialect: FxSqlQueryDialect.Dialect = {
 	escapeVal,
 	defaultValuesStmt: "DEFAULT VALUES",
 	limitAsTop: true,
+	knex: null
 }
 
 export = Dialect
