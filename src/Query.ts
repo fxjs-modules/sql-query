@@ -1,5 +1,4 @@
-/// <reference lib="es5" />
-
+import FKnex = require('@fxjs/knex')
 import { DialectTypes } from "./Helpers";
 
 import { CreateQuery } from "./Create";
@@ -17,7 +16,9 @@ export const Helpers: FxSqlQueryHelpler.HelperModule = _Helpers;
 export const Text: FxSqlQuery.TypedQueryObjectWrapper<"text"> = buildQueryType<"text">("text");
 
 export class Query implements FxSqlQuery.Class_Query {
-	private Dialect: FxSqlQueryDialect.Dialect
+	knex: FXJSKnex.FXJSKnexModule.KnexInstance;
+
+	Dialect: FxSqlQueryDialect.Dialect
 	private opts: FxSqlQuery.QueryOptions
 	private _fns: any = {}
 	private _proxyFn (fn_name: string) {
@@ -39,21 +40,21 @@ export class Query implements FxSqlQuery.Class_Query {
 	}
 
 	constructor (_opts?: string | FxSqlQuery.QueryOptions) {
-		let dialect: FxSqlQueryDialect.DialectType
 		let opts: FxSqlQuery.QueryOptions = null
-		if (typeof _opts == "string") {
-			if (!DialectTypes.includes(dialect))
+		if (typeof _opts === "string") {
+			if (!DialectTypes.includes(_opts as FxSqlQueryDialect.DialectType))
 				throw `invalid dialect type ${_opts}`
 
-			dialect = _opts as FxSqlQueryDialect.DialectType
-
-			opts = { dialect };
+			opts = { dialect: _opts as FxSqlQueryDialect.DialectType };
 		} else {
 			opts = _opts || {};
 		}
 		this.opts = opts
 
-		this.Dialect = Dialects[opts.dialect || "mysql"];
+		opts.dialect = opts.dialect || 'mysql';
+
+		this.Dialect = Dialects[opts.dialect];
+		this.Dialect.knex = FKnex({ client: opts.dialect, useNullAsDefault: true });
 
 		this.escape = this._proxyFn('escape')
 		this.escapeId = this._proxyFn('escapeId')

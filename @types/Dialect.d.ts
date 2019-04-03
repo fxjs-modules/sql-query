@@ -1,5 +1,5 @@
+/// <reference types="@fxjs/knex" />
 /// <reference path="Sql.d.ts" />
-
 declare namespace FxSqlQueryDialect {
 	type DialectType = 'mysql' | 'mssql' | 'sqlite' | 'postgresql'
 
@@ -36,6 +36,8 @@ declare namespace FxSqlQueryDialect {
 
 		defaultValuesStmt: string
 		limitAsTop: boolean
+
+		knex: FXJSKnex.FXJSKnexModule.KnexInstance
 	}
 
 	type fn_escape = Dialect['escape']

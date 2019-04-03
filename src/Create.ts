@@ -1,47 +1,6 @@
 /// <reference path="../@types/index.d.ts" />
 
 /**
- * Really lightweight templating
- * @param template
- * @param args
- * @returns {string}
- */
-function tmpl (template: string, args: {[key: string]: string}) {
-	var has = {}.hasOwnProperty;
-	for (var key in args) {
-		if (!has.call(args, key)) {
-			continue;
-		}
-		var token = '{{' + key + '}}';
-		template = template.split(token).join(args[key]);
-	}
-
-	return template;
-};
-/**
- * Builds a list of fields according to the used dialect
- * @param dialect
- * @param structure
- * @returns {string}
- */
-function buildFieldsList (dialect: FxSqlQueryDialect.Dialect, structure: FxSqlQueryColumns.FieldItemTypeMap) {
-	if (!structure) {
-		return "";
-	}
-	var tpl = "'{{NAME}}' {{TYPE}}", fields = [], has = {}.hasOwnProperty;
-	for (var field in structure) {
-		if (has.call(structure, field)) {
-			fields.push(tmpl(tpl, {
-				NAME: field,
-				TYPE: dialect.DataTypes[structure[field]]
-			}));
-		}
-	}
-
-	return fields.join(',');
-};
-
-/**
  * Instantiate a new CREATE-type query builder
  * @param Dialect
  * @returns {{table: table, field: field, fields: fields, build: build}}
@@ -93,18 +52,35 @@ export class CreateQuery implements FxSqlQuery.ChainBuilder__Create {
 	 * @returns {string}
 	 */
 	build () {
-		var fieldsList, template = "CREATE TABLE '{{TABLE_NAME}}'({{FIELDS_LIST}})";
-
 		if(!this.tableName){
 			return '';
 		}
 
-		fieldsList = buildFieldsList(this.Dialect, this.structure);
-
-		return tmpl(template, {
-			TABLE_NAME: this.tableName,
-			FIELDS_LIST: fieldsList
+		const structure = this.structure;
+		const sqlBuilder = this.Dialect.knex.schema.createTable(this.tableName, function (t) {
+			Object.keys(structure).forEach(field => {
+				const desc = structure[field];
+				switch (desc) {
+					case 'id':
+						t.increments(field);
+						break
+					case 'int':
+						t.integer(field);
+						break
+					case 'float':
+						t.float(field, 12, 2);
+						break
+					case 'bool':
+						// t.boolean(field);
+						t.specificType(field, 'TINYINT(1)');
+						break
+					case 'text':
+						t.text(field);
+						break
+				}
+			})
 		});
 
+		return sqlBuilder.toQuery();
 	}
 }

@@ -4,30 +4,30 @@ var Query  = require('../');
 common.Query = Query;
 common.Text  = Query.Text;
 
-common.Select = function () {
-	var q = new (Query.Query)();
+common.Select = function (qOpts) {
+	var q = new (Query.Query)(qOpts);
 
 	return q.select();
 };
-common.Create = function(){
-    var q = new (Query.Query)();
+common.Create = function (qOpts){
+    var q = new (Query.Query)(qOpts);
 
     return q.create();
 };
-common.Insert = function () {
-	var q = new (Query.Query)();
+common.Insert = function (qOpts) {
+	var q = new (Query.Query)(qOpts);
 
 	return q.insert();
 };
 
-common.Update = function () {
-	var q = new (Query.Query)();
+common.Update = function (qOpts) {
+	var q = new (Query.Query)(qOpts);
 
 	return q.update();
 };
 
-common.Remove = function () {
-	var q = new (Query.Query)();
+common.Remove = function (qOpts) {
+	var q = new (Query.Query)(qOpts);
 
 	return q.remove();
 };
@@ -35,3 +35,7 @@ common.Remove = function () {
 common.getDialect = function (dialect) {
 	return require('../lib/Dialects/' + dialect);
 };
+
+common.getProtocol = function () {
+	return process.env.QUERT_PROTOCOL || 'mysql'
+}

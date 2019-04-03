@@ -1,3 +1,5 @@
+/// <reference types="@fxjs/knex" />
+
 /// <reference path="Dialect.d.ts" />
 /// <reference path="SubQuery.d.ts" />
 /// <reference path="Query-ChainBuilder.d.ts" />
@@ -34,6 +36,8 @@ declare namespace FxSqlQuery {
 
 	export class Class_Query {
 		constructor (_opts?: string | FxSqlQuery.QueryOptions)
+
+		Dialect: FxSqlQueryDialect.Dialect
 
 		escape: FxSqlQueryDialect.Dialect['escape']
 		escapeId: FxSqlQueryDialect.Dialect['escapeId']
