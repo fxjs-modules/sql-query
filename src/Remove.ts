@@ -37,8 +37,6 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		}
 		query.push(this.Dialect.escapeId(this.sql.table));
 
-		console.log('this.sql.where', this.sql.where);
-
 		query = query.concat(
 			Where.build(sqlBuilder, this.Dialect, this.sql.where as FxSqlQuerySubQuery.SubQueryBuildDescriptor[], this.opts)
 		);

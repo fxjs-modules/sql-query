@@ -4,26 +4,61 @@ test.setup()
 var common = require('../common')
 var assert = require('assert')
 
-describe('update', () => {
-  it('update', () => {
+odescribe('update', () => {
+  it('update - mysql', () => {
+	const queryOptions = { dialect: 'mysql' };
+
     assert.equal(
-      common.Update().into('table1').build(),
-      'UPDATE `table1`'
+      common.Update(queryOptions).into('table1').set({ col: 1 }).build(),
+      "update `table1` set `col` = '1'"
     )
 
     assert.equal(
-      common.Update().into('table1').set({ col: 1 }).build(),
-      'UPDATE `table1` SET `col` = 1'
+      common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).build(),
+      "update `table1` set `col1` = '1', `col2` = '2'"
     )
 
     assert.equal(
-      common.Update().into('table1').set({ col1: 1, col2: 2 }).build(),
-      'UPDATE `table1` SET `col1` = 1, `col2` = 2'
+      common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).where({ id: 3 }).build(),
+      "update `table1` set `col1` = '1', `col2` = '2' where `id` = '3'"
+    )
+  })
+
+  it('update - sqlite', () => {
+	const queryOptions = { dialect: 'sqlite' };
+
+    assert.equal(
+      common.Update(queryOptions).into('table1').set({ col: 1 }).build(),
+      "update `table1` set `col` = 1"
     )
 
     assert.equal(
-      common.Update().into('table1').set({ col1: 1, col2: 2 }).where({ id: 3 }).build(),
-      'UPDATE `table1` SET `col1` = 1, `col2` = 2 WHERE `id` = 3'
+      common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).build(),
+      "update `table1` set `col1` = 1, `col2` = 2"
+    )
+
+    assert.equal(
+      common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).where({ id: 3 }).build(),
+      "update `table1` set `col1` = 1, `col2` = 2 where `id` = 3"
+    )
+  })
+
+  xit('update - mssql', () => {
+	const queryOptions = { dialect: 'mssql' };
+
+    assert.equal(
+      common.Update(queryOptions).into('table1').set({ col: 1 }).build(),
+      "update [table1] set [col] = 1;select @@rowcount"
+    )
+
+    assert.equal(
+      common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).build(),
+      "update [table1] set [col1] = 1, [col2] = 2;select @@rowcount"
+    )
+
+    assert.equal(
+      common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).where({ id: 3 }).build(),
+      "update [table1] set [col1] = 1, [col2] = 2 where [id] = 3;select @@rowcount"
     )
   })
 })
