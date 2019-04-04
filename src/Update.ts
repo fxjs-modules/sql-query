@@ -28,14 +28,21 @@ export class UpdateQuery implements FxSqlQuery.ChainBuilder__Update {
 		return this;
 	}
 	build () {
+		const sqlBuilder = this.Dialect.knex(this.sql.table)
+
 		var query = [];
 
 		query.push("UPDATE");
 		query.push(this.Dialect.escapeId(this.sql.table));
 
-		query = query.concat(UpdateSet.build(this.Dialect, this.sql.set, this.opts));
-		query = query.concat(Where.build(this.Dialect, this.sql.where, this.opts));
+		query = query.concat(
+			UpdateSet.build(sqlBuilder, this.Dialect, this.sql.set, this.opts)
+		);
+		query = query.concat(
+			Where.build(sqlBuilder, this.Dialect, this.sql.where, this.opts)
+		);
 
-		return query.join(" ");
+		return sqlBuilder.toQuery();
+		// return query.join(" ");
 	}
 }
