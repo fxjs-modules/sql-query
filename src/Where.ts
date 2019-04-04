@@ -1,9 +1,11 @@
 /// <reference path="../@types/index.d.ts" />
 
+import Knex = require('knex')
 import Helpers = require('./Helpers');
 import ComparatorsHash = require('./Comparators');
 
 export function build (
+	knexQueryBuilder: Knex.QueryBuilder,
 	Dialect: FxSqlQueryDialect.Dialect,
 	whereList: FxSqlQuerySubQuery.SubQueryBuildDescriptor[],
 	opts: FxSqlQuery.ChainBuilderOptions
@@ -16,7 +18,7 @@ export function build (
 		subquery;
 
 	for (let i = 0; i < whereList.length; i++) {
-		subquery = buildOrGroup(Dialect, whereList[i], opts);
+		subquery = buildOrGroup(knexQueryBuilder, Dialect, whereList[i], opts);
 
 		if (subquery !== false) {
 			query.push(subquery);
@@ -39,20 +41,63 @@ function isKeyConjunctionNot (k: string) {
 	return k.indexOf("_") >= 0
 }
 
+type SelectedWhereOperator =
+	'where'
+	| 'andWhere'
+	| 'orWhere'
+	| 'whereNot'
+	| 'andWhereNot'
+	| 'orWhereNot'
+	| 'whereRaw'
+	| 'orWhereRaw'
+	| 'andWhereRaw'
+	| 'whereWrapped'
+	| 'havingWrapped'
+	| 'whereExists'
+	| 'orWhereExists'
+	| 'whereNotExists'
+	| 'orWhereNotExists'
+	| 'whereIn'
+	| 'orWhereIn'
+	| 'whereNotIn'
+	| 'orWhereNotIn'
+	| 'whereNull'
+	| 'orWhereNull'
+	| 'whereNotNull'
+	| 'orWhereNotNull'
+	| 'whereBetween'
+	| 'orWhereBetween'
+	| 'andWhereBetween'
+	| 'whereNotBetween'
+	| 'orWhereNotBetween'
+	| 'andWhereNotBetween'
+
 function buildOrGroup(
+	knexQueryBuilder: Knex.QueryBuilder,
 	Dialect: FxSqlQueryDialect.Dialect,
 	where: FxSqlQuerySubQuery.SubQueryBuildDescriptor,
-	opts: FxSqlQuery.ChainBuilderOptions
+	opts: FxSqlQuery.ChainBuilderOptions,
+	innerConjuncWord?: FxSqlQueryComparator.QueryConjunctionWord
 ): FxSqlQuerySql.SqlFragmentStr[] | FxSqlQuerySql.SqlResultStr | false {
 	opts = opts || {};
 
 	if (where.exists) {
-		return buildExistsSqlFragments(Dialect, where, opts)
+		return buildExistsSqlFragments(knexQueryBuilder, Dialect, where, opts)
 	}
 
 	let query: string[] = [],
 		op: FxSqlQueryComparator.QueryComparatorType,
 		transformed_result_op: string = op;
+
+	console.log(
+		'where.wheres', where.wheres, '\n',
+		'innerConjuncWord', innerConjuncWord, '\n',
+	);
+
+	const isInnerNotAnd = innerConjuncWord === 'not' || innerConjuncWord === 'not_and';
+	const isInnerNotOr = innerConjuncWord === 'not_or';
+	const isInnerOr = innerConjuncWord === 'or';
+	const isInnerNot = innerConjuncWord === 'not';
 
 	for (let k in where.wheres) {
 		let where_conditem_value = where.wheres[k];
@@ -61,22 +106,71 @@ function buildOrGroup(
 				buildComparisonKey(Dialect, where.table, k) +
 				" IS NULL"
 			);
+
+			// ? in subquery
+			knexQueryBuilder.whereNull(k);
 			continue;
 		}
 		// `not` is an alias for `not_and`
 		if (isConjunctionWhereConditionInput(k, where_conditem_value)) {
 			let q;
 			const subquery = [];
+			const conjunctionWord = (k.toLocaleLowerCase() as FxSqlQueryComparator.QueryConjunctionWord);
 			const prefix = (k == "not" || isKeyConjunctionNot(k) ? "NOT " : false);
 
+			/**
+			 * @values FxSqlQueryComparator.QueryConjunctionWord
+			 */
 			transformed_result_op = (k == "not" ? "and" : (isKeyConjunctionNot(k) ? k.substr(NOT_PREFIX_LEN) : k)).toUpperCase();
+
+			const queryInput = where_conditem_value as FxSqlQueryComparator.SubQueryInput[]
+
+			console.log('conjunctionWord', conjunctionWord);
+
+			// const subBuilder = function (self: Knex.QueryBuilder) {
+			// 	for (let j = 0; j < queryInput.length; j++) {
+			// 		const conj_c = queryInput[j]
+
+			// 		q = buildOrGroup(
+			// 			self,
+			// 			Dialect,
+			// 			{ table: where.table, wheres: conj_c },
+			// 			opts,
+			// 			conjunctionWord
+			// 		);
+			// 		if (q !== false) {
+			// 			subquery.push(q);
+			// 		}
+			// 	}
+			// }
+
+			// switch (conjunctionWord) {
+			// 	case 'not_and':
+			// 		knexQueryBuilder.andWhereNot(function () { subBuilder(this) })
+			// 		break
+			// 	case 'not_or':
+			// 		knexQueryBuilder.orWhereNot(function () { subBuilder(this) })
+			// 		break
+			// 	case 'and':
+			// 		knexQueryBuilder.andWhere(function () { subBuilder(this) })
+			// 		break
+			// 	case 'or':
+			// 		knexQueryBuilder.orWhere(function () { subBuilder(this) })
+			// 		break
+			// 	case 'not':
+			// 		knexQueryBuilder.whereNot(function () { subBuilder(this) })
+			// 		break
+			// }
 
 			for (let j = 0; j < where_conditem_value.length; j++) {
 				const conj_c = where_conditem_value[j]
+
 				q = buildOrGroup(
+					knexQueryBuilder,
 					Dialect,
 					{ table: where.table, wheres: conj_c },
-					opts
+					opts,
+					conjunctionWord
 				);
 				if (q !== false) {
 					subquery.push(q);
@@ -92,6 +186,43 @@ function buildOrGroup(
 		let non_conj_where_conditem_value: FxSqlQuerySubQuery.NonConjunctionInputValue
 			= transformSqlComparatorLiteralObject(where_conditem_value, k, where.wheres) || where_conditem_value;
 
+		console.log(
+			'non_conj_where_conditem_value',
+			isSqlComparatorPayload(non_conj_where_conditem_value),
+			non_conj_where_conditem_value
+		);
+
+		const selectWhereOperatorByCtx = function (
+			suffix?: 'null' | 'between' | 'notBetween'
+		): SelectedWhereOperator
+		 {
+			let whereOperator = 'where'
+			switch (innerConjuncWord) {
+				case 'not_and':
+					whereOperator = 'andWhereNot'
+					break
+				case 'not':
+					whereOperator = 'whereNot'
+					break
+				case 'and':
+					whereOperator = 'where'
+					break
+				case 'or':
+					whereOperator = 'orWhere'
+					break
+				case 'not_or':
+					whereOperator = 'orWhereNot'
+					break
+				default:
+					break
+			}
+
+			if (suffix)
+				whereOperator = `${whereOperator}${Helpers.ucfirst(suffix)}`
+
+			return whereOperator as SelectedWhereOperator
+		}
+
 		if (isSqlComparatorPayload(non_conj_where_conditem_value)) {
 			op = non_conj_where_conditem_value.sql_comparator();
 
@@ -104,6 +235,10 @@ function buildOrGroup(
 						" AND " +
 						Dialect.escapeVal(non_conj_where_conditem_value.to, opts.timezone)
 					);
+
+					// #knexQueryBuilder
+					// knexQueryBuilder.whereBetween(k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
+					knexQueryBuilder[selectWhereOperatorByCtx('between')].call(knexQueryBuilder, k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
 					break;
 				case "not_between":
 					query.push(
@@ -113,6 +248,10 @@ function buildOrGroup(
 						" AND " +
 						Dialect.escapeVal(non_conj_where_conditem_value.to, opts.timezone)
 					);
+
+					// #knexQueryBuilder
+					// knexQueryBuilder.whereNotBetween(k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
+					knexQueryBuilder[selectWhereOperatorByCtx('notBetween')].call(knexQueryBuilder, k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
 					break;
 				case "like":
 					query.push(
@@ -120,6 +259,10 @@ function buildOrGroup(
 						" LIKE " +
 						Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone)
 					);
+
+					// #knexQueryBuilder
+					// knexQueryBuilder.where(k, 'like', Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone))
+					knexQueryBuilder[selectWhereOperatorByCtx()].call(knexQueryBuilder, k, 'like', Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone))
 					break;
 				case "not_like":
 					query.push(
@@ -127,6 +270,10 @@ function buildOrGroup(
 						" NOT LIKE " +
 						Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone)
 					);
+
+					// #knexQueryBuilder
+					// knexQueryBuilder.where(k, 'not like', Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone))
+					knexQueryBuilder[selectWhereOperatorByCtx()].call(knexQueryBuilder, k, 'like', Dialect.escapeVal(non_conj_where_conditem_value.expr, opts.timezone))
 					break;
 				case "eq":
 				case "ne":
@@ -147,37 +294,26 @@ function buildOrGroup(
 						case "not_in" : transformed_result_op = "NOT IN"; break;
 					}
 
-					if (!isInStyleOperator(op, non_conj_where_conditem_value))
+					if (!isInStyleOperator(op, non_conj_where_conditem_value)) {
 						query.push(
 							buildComparisonKey(Dialect, where.table, k) +
 							" " + transformed_result_op + " " +
 							Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone)
 						);
-					else {
+
+						// #knexQueryBuilder
+						// knexQueryBuilder.where(k, transformed_result_op, Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone))
+						knexQueryBuilder[selectWhereOperatorByCtx()].call(knexQueryBuilder, k, transformed_result_op, Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone))
+					} else {
 						const op = transformed_result_op as FxSqlQueryComparator.NormalizedInOperator
 						processInStyleWhereConditionInput(non_conj_where_conditem_value.val, query, Dialect, where, k, opts, op);
+
+						// #knexQueryBuilder
+						// knexQueryBuilder.where(k, transformed_result_op, Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone))
+						knexQueryBuilder[selectWhereOperatorByCtx()].call(knexQueryBuilder, k, transformed_result_op, Dialect.escapeVal(non_conj_where_conditem_value.val, opts.timezone))
 					}
 
 					break;
-				// case "sql":
-				// 	if (typeof non_conj_where_conditem_value.where == "object") {
-				// 		var sql = non_conj_where_conditem_value.where.str.replace("?:column", buildComparisonKey(Dialect, where.table, k));
-
-				// 		sql = sql.replace(/\?:(id|value)/g, function (m) {
-				// 			if (non_conj_where_conditem_value.where.escapes.length === 0) {
-				// 				return '';
-				// 			}
-
-				// 			if (m == "?:id") {
-				// 				return Dialect.escapeId(non_conj_where_conditem_value.where.escapes.shift());
-				// 			}
-				// 			// ?:value
-				// 			return Dialect.escapeVal(non_conj_where_conditem_value.where.escapes.shift(), opts.timezone);
-				// 		});
-
-				// 		query.push(sql);
-				// 	}
-				// 	break;
 			}
 			continue;
 		}
@@ -200,9 +336,17 @@ function buildOrGroup(
 					opts,
 					'IN'
 				);
-			} else {
+
+				// #knexQueryBuilder
+				// knexQueryBuilder.where(k, transformed_result_op, Dialect.escapeVal(non_conj_where_conditem_value, opts.timezone))
+				knexQueryBuilder[selectWhereOperatorByCtx()].call(knexQueryBuilder, k, transformed_result_op, Dialect.escapeVal(non_conj_where_conditem_value, opts.timezone))
+			} else { // finally, simplest where-equal
 				const normal_kv = non_conj_where_conditem_value as any
 				query.push(buildComparisonKey(Dialect, where.table, k) + " = " + Dialect.escapeVal(normal_kv, opts.timezone));
+
+				// #knexQueryBuilder
+				// knexQueryBuilder.where(k, Dialect.escapeVal(normal_kv, opts.timezone))
+				knexQueryBuilder[selectWhereOperatorByCtx()].call(knexQueryBuilder, k, Dialect.escapeVal(normal_kv, opts.timezone))
 			}
 		}
 	}
@@ -215,6 +359,7 @@ function buildOrGroup(
 }
 
 function buildExistsSqlFragments (
+	knexQueryBuilder: Knex.QueryBuilder,
 	Dialect: FxSqlQueryDialect.Dialect,
 	where: FxSqlQuerySubQuery.SubQueryBuildDescriptor,
 	opts: FxSqlQuery.ChainBuilderOptions
@@ -249,7 +394,7 @@ function buildExistsSqlFragments (
 			"SELECT * FROM " + Dialect.escapeId(where.exists.table) + " " +
 			"WHERE " + whereList.join(" AND "),
 
-			buildOrGroup(Dialect, { table: null, wheres: where.wheres }, opts) +
+			buildOrGroup(knexQueryBuilder, Dialect, { table: null, wheres: where.wheres }, opts) +
 			")"
 		].join(exists_join_key)
 	];

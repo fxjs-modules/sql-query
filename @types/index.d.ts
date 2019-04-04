@@ -1,4 +1,5 @@
 /// <reference types="fibjs" />
+/// <reference types="@fxjs/knex" />
 
 /// <reference path="Helper.d.ts" />
 /// <reference path="Aggregation.d.ts" />
