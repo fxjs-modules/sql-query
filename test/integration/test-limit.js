@@ -4,18 +4,34 @@ test.setup()
 var common     = require('../common');
 var assert     = require('assert');
 
-describe('insert', () => {
-  it('insert', () => {
+describe('limit', () => {
+  it('limit - mysql', () => {
+	const queryOptions = { dialect: 'mysql' }
+
 	assert.equal(
-		common.Select().from('table1').limit(123).build(),
-		"SELECT * FROM `table1` LIMIT 123"
+		common.Select(queryOptions).from('table1').limit(123).build(),
+		"select * from `table1` limit 123"
 	);
 
 	assert.equal(
-		common.Select().from('table1').limit('123456789').build(),
-		"SELECT * FROM `table1` LIMIT 123456789"
+		common.Select(queryOptions).from('table1').limit('123456789').build(),
+		"select * from `table1` limit 123456789"
 	);
-  })
+  });
+
+  it('limit - sqlite', () => {
+	const queryOptions = { dialect: 'sqlite' }
+
+	assert.equal(
+		common.Select(queryOptions).from('table1').limit(123).build(),
+		"select * from `table1` limit 123"
+	);
+
+	assert.equal(
+		common.Select(queryOptions).from('table1').limit('123456789').build(),
+		"select * from `table1` limit 123456789"
+	);
+  });
 })
 
 if (require.main === module) {
