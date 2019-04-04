@@ -4,7 +4,7 @@ test.setup()
 var common = require('../common')
 var assert = require('assert')
 
-odescribe('update', () => {
+describe('update', () => {
   it('update - mysql', () => {
 	const queryOptions = { dialect: 'mysql' };
 

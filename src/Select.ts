@@ -1,5 +1,7 @@
 /// <reference path="../@types/index.d.ts" />
 
+import util   = require("util");
+
 import { get_table_alias } from "./Helpers";
 import Helpers = require('./Helpers');
 import Where   = require("./Where");
@@ -319,14 +321,17 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			query.push("TOP " + this.sql.limit);
 		}
 
+		const tableAliasMap = {} as {[k: string]: string};
+
 		for (let i = 0; i < sql_from.length; i++) {
 			sql_from[i].alias = Helpers.pickAliasFromFromDescriptor(sql_from[i]) || Helpers.defaultTableAliasNameRule(i + 1);
 		}
 
-
 		const single_query = sql_from.length === 1;
 		for (let i = 0; i < sql_from.length; i++) {
 			if (!sql_from[i].select) continue;
+
+			tableAliasMap[`${sql_from[i].table}`] = sql_from[i].alias
 
 			for (let j = 0; j < sql_from[i].select.length; j++) {
 				const sql_select_item = sql_from[i].select[j]
@@ -368,6 +373,8 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			query.push("*");
 		}
 
+		const sqlBuilder = this.Dialect.knex(tableAliasMap);
+
 		if (sql_from.length > 0) {
 			query.push("FROM");
 
@@ -389,8 +396,13 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 				if (single_query) {
 					query.push(this.Dialect.escapeId(_from.table));
+
+					sqlBuilder.from(_from.table);
 				} else {
 					query.push(this.Dialect.escapeId(_from.table) + " " + this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(_from)));
+
+					sqlBuilder.from(_from.table);
+					// sqlBuilder.from(`${_from.table} as ${Helpers.pickAliasFromFromDescriptor(_from)}`);
 				}
 
 				if (i > 0) {
@@ -413,6 +425,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 		query = query.concat(
 			Where.build(
+				sqlBuilder,
 				this.Dialect,
 				this.sql.where,
 				this.opts
@@ -439,11 +452,19 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 				if (typeof ord == 'object') {
 					if (Array.isArray(ord.c)) {
 						sqlfragment_collector.push(this.Dialect.escapeId.apply(this.Dialect, ord.c) + " " + ord.d);
+
+						for (let i = 0; i < ord.c.length; i++) {
+							sqlBuilder.orderBy(ord.c[i], ord.d)
+						}
 					} else {
 						sqlfragment_collector.push(this.Dialect.escapeId(ord.c) + " " + ord.d);
+
+						sqlBuilder.orderBy(ord.c, ord.d)
 					}
 				} else if (typeof ord == 'string') {
 					sqlfragment_collector.push(ord);
+
+					sqlBuilder.orderBy(ord)
 				}
 			}
 
@@ -457,15 +478,21 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			if (this.sql.hasOwnProperty("limit")) {
 				if (this.sql.hasOwnProperty("offset")) {
 					query.push("LIMIT " + this.sql.limit + " OFFSET " + this.sql.offset);
+
+					sqlBuilder.offset( Helpers.ensureNumber(this.sql.offset) )
 				} else {
 					query.push("LIMIT " + this.sql.limit);
 				}
+
 			} else if (this.sql.hasOwnProperty("offset")) {
 				query.push("OFFSET " + this.sql.offset);
+
+				sqlBuilder.offset( Helpers.ensureNumber(this.sql.offset) )
 			}
 		}
 
-		return query.join(" ");
+		return sqlBuilder.toQuery();
+		// return query.join(" ");
 	}
 
 	abs (...args: any[]) { return this.get_aggregate_fun('ABS')(...args) }

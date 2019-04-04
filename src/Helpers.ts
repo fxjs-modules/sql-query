@@ -136,3 +136,14 @@ export function ucfirst (str: string = '') {
 
 	return str[0].toUpperCase() + str.slice(1)
 }
+
+export function ensureNumber (num: any) {
+	if (typeof num !== 'number') {
+		num = parseInt(num);
+	}
+
+	if (isNaN(num))
+		return 0;
+
+	return num;
+}
