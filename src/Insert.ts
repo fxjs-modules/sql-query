@@ -16,6 +16,8 @@ export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 	build () {
 		var query = [], cols = [], vals = [];
 
+		const sqlBuilder = this.Dialect.knex(this.sql.table);
+
 		query.push("INSERT INTO");
 		query.push(this.Dialect.escapeId(this.sql.table));
 
@@ -30,8 +32,11 @@ export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 				query.push("(" + cols.join(", ") + ")");
 				query.push("VALUES (" + vals.join(", ") + ")");
 			}
+
+			sqlBuilder.insert(this.sql.set)
 		}
 
-		return query.join(" ");
+		return sqlBuilder.toQuery();
+		// return query.join(" ");
 	}
 }

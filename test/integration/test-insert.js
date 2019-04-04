@@ -5,25 +5,41 @@ var common = require('../common')
 var assert = require('assert')
 
 describe('insert', () => {
-  it('insert', () => {
+  it('insert - mysql', () => {
+	const queryOptions = { dialect: 'mysql' };
+
     assert.equal(
-      common.Insert().into('table1').build(),
-      'INSERT INTO `table1`'
+      common.Insert(queryOptions).into('table1').set({}).build(),
+      "insert into `table1` () values ()"
     )
 
     assert.equal(
-      common.Insert().into('table1').set({}).build(),
-      'INSERT INTO `table1` VALUES()'
+      common.Insert(queryOptions).into('table1').set({ col: 1 }).build(),
+	  "insert into `table1` (`col`) values (1)"
     )
 
     assert.equal(
-      common.Insert().into('table1').set({ col: 1 }).build(),
-      'INSERT INTO `table1` (`col`) VALUES (1)'
+      common.Insert(queryOptions).into('table1').set({ col1: 1, col2: 'a' }).build(),
+      "insert into `table1` (`col1`, `col2`) values (1, 'a')"
+    )
+  })
+
+  it('insert - sqlite', () => {
+	const queryOptions = { dialect: 'sqlite' };
+
+    assert.equal(
+      common.Insert(queryOptions).into('table1').set({}).build(),
+      "insert into `table1` default values"
     )
 
     assert.equal(
-      common.Insert().into('table1').set({ col1: 1, col2: 'a' }).build(),
-      "INSERT INTO `table1` (`col1`, `col2`) VALUES (1, 'a')"
+      common.Insert(queryOptions).into('table1').set({ col: 1 }).build(),
+	  "insert into `table1` (`col`) values (1)"
+    )
+
+    assert.equal(
+      common.Insert(queryOptions).into('table1').set({ col1: 1, col2: 'a' }).build(),
+      "insert into `table1` (`col1`, `col2`) values (1, 'a')"
     )
   })
 })
