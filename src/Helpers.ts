@@ -129,3 +129,10 @@ export function defaultTableAliasNameRule (idx: number) {
 }
 
 export const DialectTypes: FxSqlQueryDialect.DialectType[] = ['mysql', 'sqlite', 'mssql']
+
+export function ucfirst (str: string = '') {
+	if (str.length <= 1)
+		return str.toUpperCase()
+
+	return str[0].toUpperCase() + str.slice(1)
+}

@@ -66,6 +66,8 @@ declare namespace FxSqlQueryComparator {
 		to?: string
 	}
 
+	type QueryConjunctionWord = "or" | "and" | "not_or" | "not_and" | "not"
+
 	interface QueryComparatorLiteralObject {
 		between: any | any[]
 		not_between: any | any[]

@@ -4,7 +4,7 @@ test.setup()
 var common     = require('../common');
 var assert     = require('assert');
 
-odescribe('create', () => {
+describe('create', () => {
     it('create - mysql', () => {
 		const queryOptions = { dialect: 'mysql' };
 

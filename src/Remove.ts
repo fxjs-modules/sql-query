@@ -1,3 +1,5 @@
+import util = require('util');
+
 import Where = require("./Where");
 import { get_table_alias } from './Helpers'
 
@@ -25,6 +27,8 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 	build () {
 		var query: FxSqlQuerySql.SqlQueryStr[] = [];
 
+		const sqlBuilder = this.Dialect.knex(this.sql.table)
+
 		// limit as: SELECT TOP n (MSSQL only)
 		if (this.Dialect.limitAsTop && this.sql.hasOwnProperty("limit")) {
 			query.push("DELETE TOP " + this.sql.limit + " FROM");
@@ -33,7 +37,15 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		}
 		query.push(this.Dialect.escapeId(this.sql.table));
 
-		query = query.concat(Where.build(this.Dialect, this.sql.where as FxSqlQuerySubQuery.SubQueryBuildDescriptor[], this.opts));
+		console.log('this.sql.where', this.sql.where);
+
+		query = query.concat(
+			Where.build(sqlBuilder, this.Dialect, this.sql.where as FxSqlQuerySubQuery.SubQueryBuildDescriptor[], this.opts)
+		);
+
+		sqlBuilder.del()
+
+		const sqlList = [sqlBuilder.toQuery()];
 
 		// order
 		if (this.sql.order.length > 0) {
@@ -53,6 +65,8 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 
 			if (tmp.length > 0) {
 				query.push("ORDER BY " + tmp.join(", "));
+
+				sqlList.push(util.last(query));
 			}
 		}
 
@@ -64,12 +78,18 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 				} else {
 					query.push("LIMIT " + this.sql.limit);
 				}
+
+				sqlList.push(util.last(query))
 			} else if (this.sql.hasOwnProperty("offset")) {
 				query.push("OFFSET " + this.sql.offset);
+				sqlBuilder.offset(this.sql.offset);
+
+				sqlList.push(util.last(query))
 			}
 		}
 
-		return query.join(" ");
+
+		return sqlList.join(' ');
 	}
 	offset (offset: number) {
 		this.sql.offset = offset;
