@@ -4,7 +4,7 @@ test.setup()
 var common = require('../common')
 var assert = require('assert')
 
-odescribe('select-type', () => {
+describe('select-type', () => {
   it('select-type', () => {
     assert.equal(
       common.Select().from('table1').fun('myfun', 'col1').build(),

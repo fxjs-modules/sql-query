@@ -147,3 +147,25 @@ export function ensureNumber (num: any) {
 
 	return num;
 }
+
+export function escapeValIfNotString (val: any, Dialect: FxSqlQueryDialect.Dialect, opts: FxSqlQuery.ChainBuilderOptions) {
+	// never escapeVal with those types, knex would escape them automatically
+	const _type = typeof val;
+
+	if (_type === 'string')
+		return val;
+	else if (_type === 'number')
+		return val;
+	else if (_type === 'boolean')
+		return val;
+	else if (val instanceof Date)
+		return val;
+	else if (val instanceof Array)
+		return val;
+	else if (val === null)
+		return val;
+	else if (val === undefined)
+		return val = null;
+
+	return Dialect.escapeVal(val, opts.timezone);
+}

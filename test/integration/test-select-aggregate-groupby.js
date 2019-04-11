@@ -4,7 +4,7 @@ test.setup()
 var common = require('../common')
 var assert = require('assert')
 
-odescribe('select-aggregate-groupby', () => {
+describe('select-aggregate-groupby', () => {
   it('select-aggregate-groupby', () => {
     assert.equal(
       common.Select().from('table1').max('col1').groupBy('col1').build(),

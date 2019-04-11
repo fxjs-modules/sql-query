@@ -4,7 +4,7 @@ test.setup()
 var common = require('../common')
 var assert = require('assert')
 
-odescribe('select', () => {
+describe('select', () => {
   describe('mysql', () => {
     it('select', () => {
       assert.equal(
