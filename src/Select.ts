@@ -303,9 +303,6 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	}
 
 	build () {
-		let sqlfragment_collector: string[] = [],
-			ord;
-
 		const having: string[] = [];
 
 		const sql_from = this.sql.from;
@@ -340,7 +337,6 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 				} else if (typeof sql_select_item == "object") {
 					const {should_continue} = buildObjectTypeSelectItem.apply(this, [
 						sqlBuilder,
-						sqlfragment_collector,
 						sql_select_item,
 						single_query,
 						sql_from_item,
@@ -359,13 +355,6 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			}
 		}
 
-		// MySQL specific!
-		if (this.sql.found_rows) {
-		}
-
-		if (sqlfragment_collector.length) {
-		}
-
 		if (sql_from.length > 0) {
 			if (sql_from.length > 2) {
 			}
@@ -378,9 +367,6 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 				if (single_query) {
 					sqlBuilder.from(sql_from_item.table);
 				} else {
-					// sqlBuilder.from(sql_from_item.table);
-					// sqlBuilder.from(`${sql_from_item.table} as ${Helpers.pickAliasFromFromDescriptor(sql_from_item)}`);
-
 					if (!first_table)
 						sqlBuilder.from(`${sql_from_item.table} as ${Helpers.pickAliasFromFromDescriptor(sql_from_item)}`);
 					else {
@@ -430,6 +416,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			sqlBuilder.groupBy(_group_by)
 		}
 
+		let ord;
 		// order
 		if (this.sql.order.length > 0) {
 			for (let i = 0; i < this.sql.order.length; i++) {
@@ -469,8 +456,6 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			return sql.replace('select ', 'select SQL_CALC_FOUND_ROWS ')
 
 		return sql;
-
-		// return query.join(" ");
 	}
 
 	abs (...args: any[]) { return this.get_aggregate_fun('ABS')(...args) }
@@ -539,7 +524,6 @@ function filterJoinOperator (
 function buildObjectTypeSelectItem (
 	this: FxSqlQuery.ChainBuilder__Select,
 	knexSqlBuilder: Knex.QueryBuilder,
-	sql_fragment_collector: string[],
 	sql_select_obj: FxSqlQuerySql.SqlSelectFieldItemDescriptor,
 	single_query: boolean,
 	sql_from_item: FxSqlQuerySql.QueryFromDescriptor,
@@ -560,8 +544,6 @@ function buildObjectTypeSelectItem (
 
 		const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj)
 		if (_as) {
-			sql_fragment_collector[sql_fragment_collector.length - 1] += " AS " + this.Dialect.escapeId(_as as FxSqlQuerySql.NormalizedSimpleSqlColumnType);
-
 			knexSqlBuilder.select(
 				this.Dialect.knex.ref( col_name ).as(_as)
 			)
@@ -571,10 +553,6 @@ function buildObjectTypeSelectItem (
 	}
 
 	if (sql_select_obj.having) {
-		console.log(
-			'[sql_select_obj.having]',
-			sql_select_obj.having
-		)
 	}
 
 	if (sql_select_obj.select) {
@@ -622,11 +600,6 @@ function buildObjectTypeSelectItem (
 			}).join(", ");
 		}
 
-		// console.log(
-		// 	'func_col_raw[1]',
-		// 	sql_select_obj,
-		// );
-
 		if (!func_col_raw)
 			func_col_raw = '*'
 
@@ -644,12 +617,6 @@ function buildObjectTypeSelectItem (
 		const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj);
 		if (_as)
 			func_col_raw += ` as ${this.Dialect.escapeId(_as)}`
-
-		// console.log(
-		// 	'func_col_raw[2]',
-		// 	func_col_raw,
-		// 	sql_select_obj
-		// );
 
 		knexSqlBuilder.select(
 			this.Dialect.knex.raw(func_col_raw)

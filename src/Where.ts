@@ -10,8 +10,6 @@ export function build (
 	whereList: FxSqlQuerySubQuery.SubQueryBuildDescriptor[],
 	opts: FxSqlQuery.ChainBuilderOptions
 ): string | string[] {
-	// console.log('[build] -------- once start --------')
-
 	if (whereList.length === 0) {
 		return [];
 	}
@@ -89,15 +87,11 @@ function buildOrGroup(
 	opts = opts || {};
 
 	if (where.exists)
-		return buildExistsSqlFragments(knexQueryBuilder, Dialect, where, opts)
+		buildExistsSqlFragments(knexQueryBuilder, Dialect, where, opts)
 
 	let query: string[] = [],
 		op: FxSqlQueryComparator.QueryComparatorType,
 		transformed_result_op: string = op;
-
-	// console.log(
-	// 	'[buildOrGroup start] where.wheres', where.wheres, '\n',
-	// );
 
 	for (let k in where.wheres) {
 		let where_conditem_value = where.wheres[k];
@@ -108,7 +102,6 @@ function buildOrGroup(
 		}
 		// `not` is an alias for `not_and`
 		if (isConjunctionWhereConditionInput(k, where_conditem_value)) {
-			let q;
 			let conjunctionWord = (k.toLocaleLowerCase() as FxSqlQueryComparator.QueryConjunctionWord);
 
 			/**
@@ -120,28 +113,17 @@ function buildOrGroup(
 
 			let {
 				nextOperator: parentConjuncWhereClosureOperator,
-				conjunction: nextConjunction
 			} = selectWhereOperatorByCtx(nextPrefixedOpWord);
 
 			let {
 				nextOperator: wrapperConjuncWhereClosureOperator,
 				conjunction: innerConjunction,
 				suffix: innerSuffix,
-				// prefix: innerPrefix
 			} = selectWhereOperatorByCtx(conjunctionWord);
 
 			if (wrapperConjuncWhereClosureOperator === 'whereNot')
 				wrapperConjuncWhereClosureOperator = selectWhereOperatorByCtx('not', innerSuffix, innerConjunction).nextOperator
 
-			// console.log('[buildOrGroup:conj] nextPrefixedOpWord', nextPrefixedOpWord);
-			// console.log('[buildOrGroup:conj] parentConjuncWhereClosureOperator', parentConjuncWhereClosureOperator);
-			// console.log('[buildOrGroup:conj] nextConjunction', nextConjunction);
-			// console.log('')
-
-			// console.log('[buildOrGroup:conj] conjunctionWord', conjunctionWord);
-			// console.log('[buildOrGroup:conj] wrapperConjuncWhereClosureOperator', wrapperConjuncWhereClosureOperator);
-			// console.log('[buildOrGroup:conj] innerConjunction', innerConjunction);
-			// console.log('-------- 2\n');
 
 			const p_call = function (cb: Function) {
 				knexQueryBuilder[ parentConjuncWhereClosureOperator ].call(
@@ -159,7 +141,7 @@ function buildOrGroup(
 					this[ wrapperConjuncWhereClosureOperator ].call(
 						this,
 						function () {
-							q = buildOrGroup(
+							buildOrGroup(
 								this,
 								Dialect,
 								{ table: where.table, wheres: conj_c },
@@ -176,9 +158,6 @@ function buildOrGroup(
 
 			p_call(loop_inner_call);
 
-			if (q !== false) {
-			}
-
 			continue;
 		}
 
@@ -186,51 +165,27 @@ function buildOrGroup(
 			innerOperator = 'where' as SelectedWhereOperator,
 		} = innerInfo || {};
 
-		// should non-innerConjuncOpWord pass
-		// console.log(
-		// 	'[before non_conj_where_conditem_value]',
-		// 	nextPrefixedOpWord,
-		// 	innerOperator,
-		// 	k
-		// );
-
 		let non_conj_where_conditem_value: FxSqlQuerySubQuery.NonConjunctionInputValue
 			= transformSqlComparatorLiteralObject(where_conditem_value, k, where.wheres) || where_conditem_value;
-
-		// console.log(
-		// 	'non_conj_where_conditem_value',
-		// 	isSqlComparatorPayload(non_conj_where_conditem_value),
-		// 	non_conj_where_conditem_value,
-		// 	k
-		// );
 
 		if (isSqlComparatorPayload(non_conj_where_conditem_value)) {
 			op = non_conj_where_conditem_value.sql_comparator();
 
-			// console.log(
-			// 	'[buildOrGroup] op?',
-			// 	op
-			// );
-
 			switch (op) {
 				case "between":
-					// #knexQueryBuilder
 					innerOperator = selectWhereOperatorByCtx(nextPrefixedOpWord, 'between').nextOperator
 					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
 					break;
 				case "not_between":
 
-					// #knexQueryBuilder
 					innerOperator = selectWhereOperatorByCtx(nextPrefixedOpWord, 'notBetween').nextOperator
 					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
 					break;
 				case "like":
-					// #knexQueryBuilder
 					innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
 					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, 'like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
 					break;
 				case "not_like":
-					// #knexQueryBuilder
 					innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
 					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, 'not like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
 					break;
@@ -254,11 +209,9 @@ function buildOrGroup(
 					}
 
 					if (!isInStyleOperator(op, non_conj_where_conditem_value)) {
-						// #knexQueryBuilder
 						innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
 						knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
 					} else {
-						// #knexQueryBuilder
 						innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
 						knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
 					}
@@ -270,7 +223,6 @@ function buildOrGroup(
 
 		if (isUnderscoreSqlInput(k, non_conj_where_conditem_value)) {
 			for (let i = 0; i < non_conj_where_conditem_value.length; i++) {
-				// #knexQueryBuilder
 				knexQueryBuilder.whereRaw(
 					normalizeSqlConditions(Dialect, non_conj_where_conditem_value[i])
 				)
@@ -280,20 +232,13 @@ function buildOrGroup(
 			 * array as 'IN'
 			 */
 			if (Array.isArray(non_conj_where_conditem_value)) {
-				// #knexQueryBuilder
 				innerOperator = selectWhereOperatorByCtx(nextPrefixedOpWord, 'in').nextOperator
 				knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, Helpers.escapeValIfNotString(non_conj_where_conditem_value, Dialect, opts))
 			} else { // finally, simplest where-equal
 				const simple_value = non_conj_where_conditem_value as any
 
 				innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-				// console.log(
-				// 	'yep here',
-				// 	innerOperator,
-				// 	simple_value
-				// )
 
-				// #knexQueryBuilder
 				knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, Helpers.escapeValIfNotString(simple_value, Dialect, opts))
 			}
 		}
@@ -364,7 +309,6 @@ function buildExistsSqlFragments (
 	opts: FxSqlQuery.ChainBuilderOptions
 ) {
 	/* start of deal with case `whereExists` */
-	// const subWheres = <{[k: string]: string}>{};
 	const link_table = where.exists.table_linked;
 
 	return knexQueryBuilder.whereExists(function () {
@@ -485,23 +429,4 @@ function isInStyleOperator (
 	where_conditem_value: FxSqlQuerySql.DetailedQueryWhereCondition<any>
 ): where_conditem_value is FxSqlQuerySql.DetailedQueryWhereCondition__InStyle {
 	return !!~['in', 'not_in'].indexOf(op);
-}
-
-function processInStyleWhereConditionInput (
-	val_in_detailed_query_condition: FxSqlQuerySql.DetailedQueryWhereCondition__InStyle['val'], // FxSqlQueryComparator.InputValue_in['in'] | FxSqlQueryComparator.InputValue_not_in['not_in'],
-	query: string[],
-	Dialect: FxSqlQueryDialect.Dialect,
-	where: FxSqlQuerySubQuery.SubQueryBuildDescriptor,
-	k: string,
-	opts: FxSqlQuery.ChainBuilderOptions,
-	transformed_result_op: FxSqlQueryComparator.NormalizedInOperator
-): void {
-	if (val_in_detailed_query_condition.length === 0) {
-		// #274: IN with empty arrays should be a false sentence
-		query.push('FALSE');
-	} else {
-		query.push(
-			`${buildComparisonKey(Dialect, where.table, k)} ${transformed_result_op} ${Dialect.escapeVal(val_in_detailed_query_condition, opts.timezone)}`
-		);
-	}
 }
