@@ -47,6 +47,28 @@ describe('order', () => {
       "select * from `table1` order by ST_Distance(`geopoint`, ST_GeomFromText('POINT(-68.3394 27.5578)',4326))"
     )
   })
+
+  it('order with table', () => {
+    assert.equal(
+      common.Select().from('table1').order(['table2', 'col']).build(),
+	'select * from `table1` order by `table2`.`col` ASC'
+    )
+
+    assert.equal(
+      common.Select().from('table1').order(['table2', '-col']).build(),
+	'select * from `table1` order by `table2`.`col` DESC'
+    )
+
+    assert.equal(
+      common.Select().from('table1').order(['table2', '-col'], 'A').build(),
+	'select * from `table1` order by `table2`.`col` ASC'
+    )
+
+    assert.equal(
+      common.Select().from('table1').order(['table2', 'col'], 'Z').build(),
+	'select * from `table1` order by `table2`.`col` DESC'
+    )
+  })
 })
 
 if (require.main === module) {
