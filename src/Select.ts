@@ -280,7 +280,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	}
 
 	order (column: FxSqlQuery.OrderNormalizedResult[0], dir?: FxSqlQuery.OrderNormalizedResult[1]) {
-		// sql type tuple
+		// 1st arg if raw sql fragment, the rest args are arguments.
 		if (Array.isArray(dir)) {
 			this.sql.order.push(
 				Helpers.escapeQuery(
@@ -291,12 +291,23 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			);
 		// normalized order array
 		} else {
+			let column_name = Array.isArray(column) ? column[1] : column
+
+			let d = null as FxSqlQuerySql.SqlOrderDescriptor['d'];
+
+			const { direction, col_name } = Helpers.cutOffOrderDirectionFromColumnFirstStr(column_name)
+			d = direction;
+			column_name = col_name;
+
+			if (dir)
+				d = (dir === "Z" ? "DESC" : "ASC")
+
 			this.sql.order.push({
 				c : Array.isArray(column) ? [
 					get_table_alias(this.sql, column[0]),
-					column[1]
-				] : column,
-				d : (dir === "Z" ? "DESC" : "ASC")
+					column_name
+				] : column_name,
+				d : d
 			});
 		}
 		return this;
@@ -423,12 +434,17 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 				ord = this.sql.order[i];
 
 				if (typeof ord == 'object') {
-					if (Array.isArray(ord.c)) {
-						for (let i = 0; i < ord.c.length; i++) {
-							sqlBuilder.orderBy(ord.c[i], ord.d)
-						}
-					} else {
+					// ord.c must be tuple [table, column]
+					if (!Array.isArray(ord.c)) {
 						sqlBuilder.orderBy(ord.c, ord.d)
+					} else if (ord.c.length === 2) {
+						sqlBuilder.orderBy(
+							this.Dialect.knex.ref(ord.c[1]).withSchema(ord.c[0]),
+							// this.Dialect.escapeId.apply(this.Dialect, ord.c),
+							ord.d
+						)
+					} else {
+						throw `invalid order item input!`
 					}
 				} else if (typeof ord == 'string') {
 					sqlBuilder.orderByRaw(ord)

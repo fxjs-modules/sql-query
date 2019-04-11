@@ -169,3 +169,23 @@ export function escapeValIfNotString (val: any, Dialect: FxSqlQueryDialect.Diale
 
 	return Dialect.escapeVal(val, opts.timezone);
 }
+
+export function cutOffOrderDirectionFromColumnFirstStr (col_name: string): {
+	col_name: string
+	direction: FxSqlQuerySql.SqlOrderDescriptor['d']
+} {
+	const result = {
+		col_name,
+		direction: 'ASC' as FxSqlQuerySql.SqlOrderDescriptor['d']
+	}
+
+	if (typeof col_name !== 'string')
+		return result
+
+	if (col_name[0] === '-') {
+		result.col_name = col_name.substr(1)
+		result.direction = 'DESC'
+	}
+
+	return result
+}
