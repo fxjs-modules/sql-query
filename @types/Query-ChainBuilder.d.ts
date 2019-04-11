@@ -37,6 +37,8 @@ declare namespace FxSqlQuery {
 	interface ChainBuilder__Select
 		extends ChainBuilder, FxSqlQuery.SupportedAggregationsMixin, ChainBuilderPaginationMixin, ChainBuilderSortMixin
 	{
+		Dialect: FxSqlQueryDialect.Dialect
+
 		select: (fields: FxSqlQueryColumns.SelectInputArgType[]) => this
 		/**
 		 * .where('table1', {t1_col1: 'v1'}, 'table2', {t1_col2: 'v2'}, ...)

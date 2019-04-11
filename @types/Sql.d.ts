@@ -120,7 +120,7 @@ declare namespace FxSqlQuerySql {
 		string,
 		// to table alias name
 		string,
-		// from id column name
+		// to id column name
 		string,
 	]
 
