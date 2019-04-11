@@ -126,7 +126,7 @@ describe('where', () => {
         .from('table2', 'id', 'id')
         .where('table1', { col: 1 }, 'table2', { col: 2 }).build(),
     // 'SELECT * FROM `table1` `t1` JOIN `table2` `t2` ON `t2`.`id` = `t1`.`id` WHERE (`t1`.`col` = 1) AND (`t2`.`col` = 2)'
-	'select * from `table1` as `t1` inner join `table2` as `t2` on `t2`.`id` = `t1`.`id` where `col` = 1 and `col` = 2'
+	'select * from `table1` as `t1` inner join `table2` as `t2` on `t2`.`id` = `t1`.`id` where `t1`.`col` = 1 and `t2`.`col` = 2'
     )
 
 	// .where(tablename, conditions, aliasname, conditions)
@@ -134,7 +134,8 @@ describe('where', () => {
       common.Select().from('table1')
         .from('table2', 'id', 'id')
         .where('table1', { col: 1 }, 't2', { col: 2 }).build(),
-      'select * from `table1` as `t1` inner join `table2` as `t2` on `t2`.`id` = `t1`.`id` where `col` = 1 and `col` = 2'
+	// 'SELECT * FROM `table1` `t1` JOIN `table2` `t2` ON `t2`.`id` = `t1`.`id` WHERE (`t1`.`col` = 1) AND (`t2`.`col` = 2)'
+	'select * from `table1` as `t1` inner join `table2` as `t2` on `t2`.`id` = `t1`.`id` where `t1`.`col` = 1 and `t2`.`col` = 2'
     )
 
     assert.equal(
@@ -142,7 +143,7 @@ describe('where', () => {
         .from('table2', 'id', 'id')
         .where('table1', { col: 1 }, { col: 2 }).build(),
     // 'SELECT * FROM `table1` `t1` JOIN `table2` `t2` ON `t2`.`id` = `t1`.`id` WHERE (`t1`.`col` = 1) AND (`col` = 2)'
-	'select * from `table1` as `t1` inner join `table2` as `t2` on `t2`.`id` = `t1`.`id` where `col` = 1 and `col` = 2'
+	'select * from `table1` as `t1` inner join `table2` as `t2` on `t2`.`id` = `t1`.`id` where `t1`.`col` = 1 and `col` = 2'
     )
 
     assert.equal(

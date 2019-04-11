@@ -86,8 +86,10 @@ function buildOrGroup(
 ): FxSqlQuerySql.SqlFragmentStr[] | FxSqlQuerySql.SqlResultStr | false {
 	opts = opts || {};
 
-	if (where.exists)
-		buildExistsSqlFragments(knexQueryBuilder, Dialect, where, opts)
+	if (where.exists) {
+		buildExistsSqlFragments(knexQueryBuilder, Dialect, where, opts);
+		return ;
+	}
 
 	let query: string[] = [],
 		op: FxSqlQueryComparator.QueryComparatorType,
@@ -165,8 +167,10 @@ function buildOrGroup(
 			innerOperator = 'where' as SelectedWhereOperator,
 		} = innerInfo || {};
 
+		const normalizedKey = getComparisonKey(Dialect, where.table, k);
+
 		let non_conj_where_conditem_value: FxSqlQuerySubQuery.NonConjunctionInputValue
-			= transformSqlComparatorLiteralObject(where_conditem_value, k, where.wheres) || where_conditem_value;
+			= transformSqlComparatorLiteralObject(where_conditem_value, normalizedKey, where.wheres) || where_conditem_value;
 
 		if (isSqlComparatorPayload(non_conj_where_conditem_value)) {
 			op = non_conj_where_conditem_value.sql_comparator();
@@ -174,20 +178,20 @@ function buildOrGroup(
 			switch (op) {
 				case "between":
 					innerOperator = selectWhereOperatorByCtx(nextPrefixedOpWord, 'between').nextOperator
-					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
+					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
 					break;
 				case "not_between":
 
 					innerOperator = selectWhereOperatorByCtx(nextPrefixedOpWord, 'notBetween').nextOperator
-					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
+					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, [non_conj_where_conditem_value.from, non_conj_where_conditem_value.to])
 					break;
 				case "like":
 					innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, 'like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
+					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, 'like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
 					break;
 				case "not_like":
 					innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-					knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, 'not like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
+					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, 'not like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
 					break;
 				case "eq":
 				case "ne":
@@ -210,10 +214,10 @@ function buildOrGroup(
 
 					if (!isInStyleOperator(op, non_conj_where_conditem_value)) {
 						innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-						knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
+						knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
 					} else {
 						innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-						knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
+						knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
 					}
 
 					break;
@@ -233,13 +237,13 @@ function buildOrGroup(
 			 */
 			if (Array.isArray(non_conj_where_conditem_value)) {
 				innerOperator = selectWhereOperatorByCtx(nextPrefixedOpWord, 'in').nextOperator
-				knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, Helpers.escapeValIfNotString(non_conj_where_conditem_value, Dialect, opts))
+				knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, Helpers.escapeValIfNotString(non_conj_where_conditem_value, Dialect, opts))
 			} else { // finally, simplest where-equal
 				const simple_value = non_conj_where_conditem_value as any
 
 				innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
 
-				knexQueryBuilder[innerOperator].call(knexQueryBuilder, k, Helpers.escapeValIfNotString(simple_value, Dialect, opts))
+				knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, Helpers.escapeValIfNotString(simple_value, Dialect, opts))
 			}
 		}
 	}
@@ -311,14 +315,14 @@ function buildExistsSqlFragments (
 	/* start of deal with case `whereExists` */
 	const link_table = where.exists.table_linked;
 
-	return knexQueryBuilder.whereExists(function () {
+	knexQueryBuilder.whereExists(function () {
 		this.select('*')
 			.from(where.exists.table)
 
 		/**
 		 * @example whereExists('table2', 'table1', [['fid1', 'fid2'], ['id1', 'id2']], { col1: 1, col2: 2 })
 		 */
-		if(Array.isArray(where.exists.link_info[0]) && Array.isArray(where.exists.link_info[1])) {
+		if (Array.isArray(where.exists.link_info[0]) && Array.isArray(where.exists.link_info[1])) {
 			const col_tuple_for_aligning_from = where.exists.link_info[0];
 			const col_tuple_for_aligning_to = where.exists.link_info[1];
 
@@ -342,13 +346,16 @@ function buildExistsSqlFragments (
 				)
 			}
 		}
-
-		buildOrGroup(knexQueryBuilder, Dialect, { table: null, wheres: where.wheres }, opts)
 	});
+
+	buildOrGroup(knexQueryBuilder, Dialect, { table: null, wheres: where.wheres }, opts)
 }
 
-function buildComparisonKey(Dialect: FxSqlQueryDialect.Dialect, table: string, column: string) {
-	return (table ? Dialect.escapeId(table, column) : Dialect.escapeId(column));
+function getComparisonKey(Dialect: FxSqlQueryDialect.Dialect, table: string, column: string) {
+	if (!table)
+		return column;
+
+	return Dialect.knex.ref(column).withSchema(table);
 }
 
 function normalizeSqlConditions(Dialect: FxSqlQueryDialect.Dialect, queryArray: FxSqlQuerySql.SqlAssignmentTuple) {
