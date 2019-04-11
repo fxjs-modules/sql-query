@@ -1,12 +1,13 @@
 /// <reference path="../@types/index.d.ts" />
 
-import util   = require("util");
-
+import Knex   = require('knex');
 import { get_table_alias } from "./Helpers";
 import Helpers = require('./Helpers');
 import Where   = require("./Where");
 
 export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
+	Dialect: FxSqlQueryDialect.Dialect
+
 	private sql: FxSqlQuerySql.SqlQueryChainDescriptor = {
 		from         : [],
 		where        : [],
@@ -56,7 +57,8 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		return func
 	};
 
-	constructor(private Dialect: FxSqlQueryDialect.Dialect, private opts: FxSqlQuery.QueryOptions) {
+	constructor(Dialect: FxSqlQueryDialect.Dialect, private opts: FxSqlQuery.QueryOptions) {
+		this.Dialect = Dialect;
 	}
 
 	select (fields?: any) {
@@ -301,9 +303,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	}
 
 	build () {
-		let query: string[] = [],
-			sqlfragment_collector: string[] = [],
-			_from,
+		let sqlfragment_collector: string[] = [],
 			ord;
 
 		const having: string[] = [];
@@ -314,49 +314,46 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 			this.fun(this.fun_stack.pop());
 		}
 
-		query.push("SELECT");
-
-		// limit as: SELECT TOP n (MSSQL only)
-		if (this.Dialect.limitAsTop && this.sql.hasOwnProperty("limit")) {
-			query.push("TOP " + this.sql.limit);
-		}
-
 		const tableAliasMap = {} as {[k: string]: string};
 
 		for (let i = 0; i < sql_from.length; i++) {
 			sql_from[i].alias = Helpers.pickAliasFromFromDescriptor(sql_from[i]) || Helpers.defaultTableAliasNameRule(i + 1);
+
+			tableAliasMap[`${sql_from[i].alias}`] = `${sql_from[i].table}`
 		}
 
 		const single_query = sql_from.length === 1;
+
+		const sqlBuilder = this.Dialect.knex(tableAliasMap);
+
 		for (let i = 0; i < sql_from.length; i++) {
 			if (!sql_from[i].select) continue;
 
-			tableAliasMap[`${sql_from[i].table}`] = sql_from[i].alias
-
 			for (let j = 0; j < sql_from[i].select.length; j++) {
-				const sql_select_item = sql_from[i].select[j]
+				const sql_from_item = sql_from[i];
+				const sql_select_item = sql_from_item.select[j]
+				const selectFromPrefix = single_query ? '' : `${sql_from_item.alias}.`;
 
 				if (typeof sql_select_item == "string" ) {
-					buildStringTypeSelectItem.apply(this, [
-						sqlfragment_collector,
-						sql_select_item,
-						single_query,
-						Helpers.pickAliasFromFromDescriptor(sql_from[i])
-					])
+					sqlBuilder.select(`${selectFromPrefix}${sql_select_item}`)
 					continue;
 				} else if (typeof sql_select_item == "object") {
 					const {should_continue} = buildObjectTypeSelectItem.apply(this, [
+						sqlBuilder,
 						sqlfragment_collector,
 						sql_select_item,
 						single_query,
-						Helpers.pickAliasFromFromDescriptor(sql_from[i]),
+						sql_from_item,
 						having
 					]);
 
 					if (should_continue)
 						continue ;
 				} else if (typeof sql_select_item == "function") {
-					sqlfragment_collector.push(sql_select_item(this.Dialect));
+					const raw = sql_select_item(this.Dialect);
+
+					sqlBuilder.select(this.Dialect.knex.raw(raw))
+
 					continue;
 				}
 			}
@@ -364,112 +361,92 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 
 		// MySQL specific!
 		if (this.sql.found_rows) {
-			query.push("SQL_CALC_FOUND_ROWS");
 		}
 
 		if (sqlfragment_collector.length) {
-			query.push(sqlfragment_collector.join(", "));
-		} else {
-			query.push("*");
 		}
 
-		const sqlBuilder = this.Dialect.knex(tableAliasMap);
-
 		if (sql_from.length > 0) {
-			query.push("FROM");
-
 			if (sql_from.length > 2) {
-				query.push((new Array(sql_from.length - 1)).join("("));
 			}
 
 			const single_query = sql_from.length == 1 && !this.sql.where_exists;
 
-			for (let i = 0; i < sql_from.length; i++) {
-				_from = sql_from[i];
-
-				if (i > 0) {
-					if (_from.opts && _from.opts.joinType) {
-						query.push(_from.opts.joinType.toUpperCase());
-					}
-					query.push("JOIN");
-				}
+			for (let i = 0, first_table = false; i < sql_from.length; i++) {
+				const sql_from_item = sql_from[i];
 
 				if (single_query) {
-					query.push(this.Dialect.escapeId(_from.table));
-
-					sqlBuilder.from(_from.table);
+					sqlBuilder.from(sql_from_item.table);
 				} else {
-					query.push(this.Dialect.escapeId(_from.table) + " " + this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(_from)));
+					// sqlBuilder.from(sql_from_item.table);
+					// sqlBuilder.from(`${sql_from_item.table} as ${Helpers.pickAliasFromFromDescriptor(sql_from_item)}`);
 
-					sqlBuilder.from(_from.table);
-					// sqlBuilder.from(`${_from.table} as ${Helpers.pickAliasFromFromDescriptor(_from)}`);
+					if (!first_table)
+						sqlBuilder.from(`${sql_from_item.table} as ${Helpers.pickAliasFromFromDescriptor(sql_from_item)}`);
+					else {
+						const join_obj: {[k: string]: string} = {};
+						const table_str = Helpers.pickAliasFromFromDescriptor(sql_from_item) || sql_from_item.table;
+
+						sql_from_item.joins.forEach(join_item => {
+							join_obj[`${table_str}.${join_item[0]}`] = `${join_item[1]}.${join_item[2]}`
+						});
+
+						const joinOperator = filterJoinOperator(sql_from_item.opts)
+
+						sqlBuilder[joinOperator](
+							`${sql_from_item.table} as ${Helpers.pickAliasFromFromDescriptor(sql_from_item)}`, join_obj
+						)
+					}
+
 				}
 
+				first_table = true;
+
 				if (i > 0) {
-					query.push("ON");
-
-					buildJoinOn.apply(this, [query, _from]);
-
-					if (i < sql_from.length - 1) {
-						query.push(")");
-					}
 				}
 			}
 		}
 
 		if (having.length > 0) {
-			for (let i = 0; i < having.length; i++) {
-				query.push( (i === 0 ? "HAVING" : "AND") + having[i]);
-			}
 		}
 
-		query = query.concat(
-			Where.build(
-				sqlBuilder,
-				this.Dialect,
-				this.sql.where,
-				this.opts
-			)
-		);
+		Where.build(
+			sqlBuilder,
+			this.Dialect,
+			this.sql.where,
+			this.opts
+		)
 
 		if (this.sql.group_by !== null) {
-			query.push("GROUP BY " + this.sql.group_by.map((column) => {
+			const _group_by = this.sql.group_by.map((column) => {
 				if (column[0] == "-") {
 					const cname = column.substr(1)
 					this.sql.order.unshift({ c: cname, d: "DESC" });
-					return this.Dialect.escapeId(cname);
+					return cname;
 				}
-				return this.Dialect.escapeId(column);
-			}).join(", "));
+				return column;
+			});
+
+			sqlBuilder.groupBy(_group_by)
 		}
 
 		// order
 		if (this.sql.order.length > 0) {
-			sqlfragment_collector = [];
 			for (let i = 0; i < this.sql.order.length; i++) {
 				ord = this.sql.order[i];
 
 				if (typeof ord == 'object') {
 					if (Array.isArray(ord.c)) {
-						sqlfragment_collector.push(this.Dialect.escapeId.apply(this.Dialect, ord.c) + " " + ord.d);
-
 						for (let i = 0; i < ord.c.length; i++) {
 							sqlBuilder.orderBy(ord.c[i], ord.d)
 						}
 					} else {
-						sqlfragment_collector.push(this.Dialect.escapeId(ord.c) + " " + ord.d);
-
 						sqlBuilder.orderBy(ord.c, ord.d)
 					}
 				} else if (typeof ord == 'string') {
-					sqlfragment_collector.push(ord);
 
 					sqlBuilder.orderBy(ord)
 				}
-			}
-
-			if (sqlfragment_collector.length > 0) {
-				query.push("ORDER BY " + sqlfragment_collector.join(", "));
 			}
 		}
 
@@ -477,21 +454,21 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 		if (!this.Dialect.limitAsTop) {
 			if (this.sql.hasOwnProperty("limit")) {
 				if (this.sql.hasOwnProperty("offset")) {
-					query.push("LIMIT " + this.sql.limit + " OFFSET " + this.sql.offset);
-
 					sqlBuilder.offset( Helpers.ensureNumber(this.sql.offset) )
-				} else {
-					query.push("LIMIT " + this.sql.limit);
 				}
-
 			} else if (this.sql.hasOwnProperty("offset")) {
-				query.push("OFFSET " + this.sql.offset);
-
 				sqlBuilder.offset( Helpers.ensureNumber(this.sql.offset) )
 			}
 		}
 
-		return sqlBuilder.toQuery();
+		const sql = sqlBuilder.toQuery();
+
+		// MYSQL specific.
+		if (this.sql.found_rows)
+			return sql.replace('select ', 'select SQL_CALC_FOUND_ROWS ')
+
+		return sql;
+
 		// return query.join(" ");
 	}
 
@@ -523,101 +500,110 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 	distinct (...args: any[]) { return this.get_aggregate_fun('DISTINCT')(...args) }
 }
 
-function buildJoinOn (
-	this: FxSqlQuery.ChainBuilder__Select,
-	query: string[], _from: FxSqlQuerySql.QueryFromDescriptor
-) {
-	for (let ii = 0; ii < _from.joins.length; ii++) {
-		if (ii > 0) {
-			query.push("AND");
-		}
-		query.push(
-			this.Dialect.escapeId(Helpers.pickAliasFromFromDescriptor(_from), _from.joins[ii][0]) +
-			" = " +
-			this.Dialect.escapeId(_from.joins[ii][1], _from.joins[ii][2])
-		);
-	}
-}
+function filterJoinOperator (
+	opts: FxSqlQuerySql.QueryFromDescriptor['opts'] | undefined
+):  'join'
+	| 'leftJoin'
+	| 'leftOuterJoin'
+	| 'rightJoin'
+	| 'rightOuterJoin'
+	| 'fullOuterJoin'
+	| 'crossJoin'
+{
+	let { joinType = '' } = opts || {};
+	joinType = (joinType || '').trim();
 
-function buildStringTypeSelectItem (
-	this: FxSqlQuery.ChainBuilder__Select,
-	sql_fragment_collector: string[],
-	sql_select_item: string,
-	single_query: boolean,
-	alias: string
-) {
-	if (single_query) {
-		sql_fragment_collector.push(this.Dialect.escapeId(sql_select_item));
-	} else {
-		sql_fragment_collector.push(this.Dialect.escapeId(alias, sql_select_item));
+	joinType = joinType.toUpperCase()
+	switch (joinType) {
+		default:
+		case 'FULL':
+			return 'join';
+		case 'LEFT':
+		case 'LEFT INNER':
+			return 'leftJoin';
+		case 'LEFT OUTER JOIN':
+			return 'leftOuterJoin';
+		case 'RIGHT':
+		case 'RIGHT INNER':
+			return 'rightJoin';
+		case 'RIGHT OUTER':
+			return 'rightOuterJoin';
+		case 'FULL OUTER':
+			return 'fullOuterJoin';
+		case 'CROSS':
+			return 'crossJoin';
 	}
 }
 
 function buildObjectTypeSelectItem (
 	this: FxSqlQuery.ChainBuilder__Select,
+	knexSqlBuilder: Knex.QueryBuilder,
 	sql_fragment_collector: string[],
 	sql_select_obj: FxSqlQuerySql.SqlSelectFieldItemDescriptor,
 	single_query: boolean,
-	alias: string,
+	sql_from_item: FxSqlQuerySql.QueryFromDescriptor,
 	having: string[]
 ): {
 	should_continue: boolean,
 	return_value: string
 } {
+	const alias = Helpers.pickAliasFromFromDescriptor(sql_from_item);
+
 	const return_wrapper = {
 		should_continue: false,
 		return_value: ''
 	};
 
-	let str;
-
 	if (!sql_select_obj.func_name && sql_select_obj.column_name) {
-		if (single_query) {
-			sql_fragment_collector.push(
-				this.Dialect.escapeId(sql_select_obj.column_name as FxSqlQuerySql.SqlFragmentStr)
-			);
-		} else {
-			sql_fragment_collector.push(
-				this.Dialect.escapeId(
-					alias,
-					sql_select_obj.column_name as FxSqlQuerySql.SqlFragmentStr
-				)
-			);
-		}
+		const col_name = sql_select_obj.column_name as FxSqlQuerySql.SqlFragmentStr
+
 		const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj)
 		if (_as) {
 			sql_fragment_collector[sql_fragment_collector.length - 1] += " AS " + this.Dialect.escapeId(_as as FxSqlQuerySql.NormalizedSimpleSqlColumnType);
+
+			knexSqlBuilder.select(
+				this.Dialect.knex.ref( col_name ).as(_as)
+			)
+		} else {
+			knexSqlBuilder.select(col_name);
 		}
 	}
 
 	if (sql_select_obj.having) {
-		having.push(this.Dialect.escapeId(sql_select_obj.having));
+		console.log(
+			'[sql_select_obj.having]',
+			sql_select_obj.having
+		)
 	}
 
 	if (sql_select_obj.select) {
-		sql_fragment_collector.push(this.Dialect.escapeId(sql_select_obj.select));
-
-		return_wrapper.should_continue = true;
-		return return_wrapper;
+		knexSqlBuilder.select(sql_select_obj.select)
 	}
 
 	if (sql_select_obj.func_name) {
-		str = sql_select_obj.func_name + "(";
+		let func_col_raw = '';
 
-		if (sql_select_obj.column_name && !Array.isArray(sql_select_obj.column_name)) {
-			sql_select_obj.column_name = [ sql_select_obj.column_name as string ];
+		let column_descriptors = null;
+
+		if (sql_select_obj.column_name) {
+			column_descriptors = Array.isArray(sql_select_obj.column_name) ? sql_select_obj.column_name : [ sql_select_obj.column_name as string ];
 		}
-
-		const column_descriptors = sql_select_obj.column_name
-		if (Array.isArray(column_descriptors)) {
-			str += column_descriptors.map((col_desc) => {
+		if (Array.isArray(column_descriptors) && column_descriptors.length) {
+			func_col_raw += column_descriptors.map((col_desc) => {
 				if (!col_desc) {
-					return this.Dialect.escapeVal(col_desc);
+					return this.Dialect.escapeVal(col_desc as string);
 				}
 
 				/* when col_desc is type:SqlColumnDescriptor */
 				if (typeof col_desc === 'object' && typeof col_desc.type === "function") {
 					switch (col_desc.type()) {
+						/**
+						 * @usage support usage like below:
+						 *
+						 * ```
+						 * query.select().from('table1').fun('myfun', [ 'col1', common.Text('col2') ], 'alias')
+						 * ```
+						 */
 						case "text":
 							return this.Dialect.escapeVal(col_desc.data, this.opts.timezone);
 						default:
@@ -633,26 +619,48 @@ function buildObjectTypeSelectItem (
 					return this.Dialect.escapeId(alias, col_desc);
 				}
 			}).join(", ");
-		} else {
-			str += "*";
 		}
-		str += ")";
+
+		// console.log(
+		// 	'func_col_raw[1]',
+		// 	sql_select_obj,
+		// );
+
+		if (!func_col_raw)
+			func_col_raw = '*'
+
+		if (!func_col_raw) {
+			func_col_raw += `${sql_select_obj.func_name}(*)`;
+		} else {
+			func_col_raw = `${sql_select_obj.func_name}(${func_col_raw})`;
+		}
+
+		if (sql_select_obj.func_stack && sql_select_obj.func_stack.length > 0) {
+			func_col_raw = sql_select_obj.func_stack.join("(") + "(" + func_col_raw +
+					Array(sql_select_obj.func_stack.length + 1).join(")");
+		}
+
+		const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj);
+		if (_as)
+			func_col_raw += ` as ${this.Dialect.escapeId(_as)}`
+
+		// console.log(
+		// 	'func_col_raw[2]',
+		// 	func_col_raw,
+		// 	sql_select_obj
+		// );
+
+		knexSqlBuilder.select(
+			this.Dialect.knex.raw(func_col_raw)
+		)
 	} else if (sql_select_obj.sql) {
-		str = '(' + sql_select_obj.sql + ')';
+		const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj);
+
+		const raw = this.Dialect.knex.raw(`${sql_select_obj.sql}${_as ? ` as ${this.Dialect.escapeId(_as)}` : ``}`);
+
+		knexSqlBuilder.select( raw )
 	} else {
-		return_wrapper.should_continue = true;
-		return return_wrapper;
 	}
-
-	const _as = Helpers.pickColumnAsFromSelectFieldsDescriptor(sql_select_obj);
-	str += _as ? " AS " + this.Dialect.escapeId(_as) : "";
-
-	if (sql_select_obj.func_stack && sql_select_obj.func_stack.length > 0) {
-		str = sql_select_obj.func_stack.join("(") + "(" + str +
-				Array(sql_select_obj.func_stack.length + 1).join(")");
-	}
-
-	sql_fragment_collector.push(str);
 
 	return return_wrapper;
 }
