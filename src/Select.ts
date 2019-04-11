@@ -444,8 +444,7 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 						sqlBuilder.orderBy(ord.c, ord.d)
 					}
 				} else if (typeof ord == 'string') {
-
-					sqlBuilder.orderBy(ord)
+					sqlBuilder.orderByRaw(ord)
 				}
 			}
 		}
@@ -456,6 +455,8 @@ export class SelectQuery implements FxSqlQuery.ChainBuilder__Select {
 				if (this.sql.hasOwnProperty("offset")) {
 					sqlBuilder.offset( Helpers.ensureNumber(this.sql.offset) )
 				}
+
+				sqlBuilder.limit( Helpers.ensureNumber(this.sql.limit) )
 			} else if (this.sql.hasOwnProperty("offset")) {
 				sqlBuilder.offset( Helpers.ensureNumber(this.sql.offset) )
 			}

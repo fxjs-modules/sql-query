@@ -15,18 +15,18 @@ describe('remove', () => {
 
     assert.equal(
       common.Remove(queryOptions).from('table1').where({ col: 1 }).build(),
-      "delete from `table1` where `col` = '1'"
+      "delete from `table1` where `col` = 1"
     )
 
     assert.equal(
       common.Remove(queryOptions).from('table1').where({ col1: 1 }, { col2: 2 }).build(),
-      "delete from `table1` where `col1` = '1' and `col2` = '2'"
+      "delete from `table1` where `col1` = 1 and `col2` = 2"
     )
 
     assert.equal(
       common.Remove(queryOptions).from('table1').where({ or: [{ col: 1 }, { col: 2 }] }).build(),
       //   'delete from `table1` where ((`col` = 1) OR (`col` = 2))'
-	  "delete from `table1` where `col` = '1' or `col` = '2'"
+	  "delete from `table1` where ((`col` = 1) or (`col` = 2))"
     )
 
     assert.equal(

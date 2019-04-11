@@ -4,7 +4,7 @@ test.setup()
 var common = require('../common')
 var assert = require('assert')
 
-odescribe('select-aggregate', () => {
+describe('select-aggregate', () => {
   it('select-aggregate', () => {
     assert.equal(
       common.Select().from('table1').max('col1').build(),
