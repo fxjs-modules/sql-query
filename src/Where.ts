@@ -346,9 +346,9 @@ function buildExistsSqlFragments (
 				)
 			}
 		}
-	});
 
-	buildOrGroup(knexQueryBuilder, Dialect, { table: null, wheres: where.wheres }, opts)
+		buildOrGroup(this, Dialect, { table: null, wheres: where.wheres }, opts)
+	});
 }
 
 function getComparisonKey(Dialect: FxSqlQueryDialect.Dialect, table: string, column: string) {
