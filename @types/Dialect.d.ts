@@ -19,6 +19,7 @@ declare namespace FxSqlQueryDialect {
 
 	interface Dialect {
 		DataTypes: DataTypesDescriptor
+		type: DialectType
 
 		escape: {
 			(
@@ -34,7 +35,6 @@ declare namespace FxSqlQueryDialect {
 			(vals: FxSqlQuerySql.DetailedQueryWhereCondition__InStyle['val'], timezone?: FxSqlQuery.FxSqlQueryTimezone): string
 		}
 
-		defaultValuesStmt: string
 		limitAsTop: boolean
 
 		readonly knex: FXJSKnex.FXJSKnexModule.KnexInstance

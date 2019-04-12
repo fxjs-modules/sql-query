@@ -65,11 +65,11 @@ function escapeVal (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) {
 };
 
 const Dialect: FxSqlQueryDialect.Dialect = {
+	type: 'sqlite',
 	DataTypes,
 	escape,
 	escapeId,
 	escapeVal,
-	defaultValuesStmt: "DEFAULT VALUES",
 	limitAsTop: false,
 	knex: null
 }

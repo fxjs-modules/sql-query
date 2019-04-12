@@ -9,6 +9,7 @@ exports.DataTypes = {
 	text:  'TEXT'
 };
 
+exports.type = 'postgresql'
 
 exports.escape = function (query, args) {
 	return helpers.escapeQuery(exports, query, args);

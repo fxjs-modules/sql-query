@@ -1,3 +1,5 @@
+/// <reference lib="es2017" />
+
 import util = require('util');
 
 import FKnex = require('@fxjs/knex');
@@ -17,9 +19,25 @@ export const comparators = ComparatorsHash;
 export const Helpers: FxSqlQueryHelpler.HelperModule = _Helpers;
 export const Text: FxSqlQuery.TypedQueryObjectWrapper<"text"> = buildQueryType<"text">("text");
 
-export class Query implements FxSqlQuery.Class_Query {
-	knex: FXJSKnex.FXJSKnexModule.KnexInstance;
+function mountKnex (
+	this: FxSqlQuery.Class_Query,
+	Dialect: FxSqlQuery.Class_Query['Dialect']
+) {
+	// TODO: use really fresh dialect rather than shallow copy.
+	this.Dialect = util.extend({}, Dialect);
+	Object.defineProperty(this.Dialect, 'knex', {
+		value: FKnex({ client: this.Dialect.type, useNullAsDefault: true }),
+		writable: false,
+		configurable: false
+	})
 
+	Object.defineProperty(this, 'knex', {
+		value: this.Dialect.knex,
+		writable: false,
+		configurable: false
+	})
+}
+export class Query implements FxSqlQuery.Class_Query {
 	Dialect: FxSqlQueryDialect.Dialect
 	private opts: FxSqlQuery.QueryOptions
 	private _fns: any = {}
@@ -55,18 +73,14 @@ export class Query implements FxSqlQuery.Class_Query {
 
 		opts.dialect = opts.dialect || 'mysql';
 
-		// TODO: use really fresh dialect rather than shallow copy.
-		this.Dialect = util.extend({}, Dialects[opts.dialect]);
-		Object.defineProperty(this.Dialect, 'knex', {
-			value: FKnex({ client: opts.dialect, useNullAsDefault: true }),
-			writable: false,
-			configurable: false
-		})
+		mountKnex.call(this, Dialects[opts.dialect]);
 
 		this.escape = this._proxyFn('escape')
 		this.escapeId = this._proxyFn('escapeId')
 		this.escapeVal = this._proxyFn('escapeVal')
 	}
+
+	knex: FXJSKnex.FXJSKnexModule.KnexInstance
 
 	escape: FxSqlQuery.Class_Query['escape']
 	escapeId: FxSqlQuery.Class_Query['escapeId']

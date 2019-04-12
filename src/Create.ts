@@ -71,7 +71,6 @@ export class CreateQuery implements FxSqlQuery.ChainBuilder__Create {
 						t.float(field, 12, 2);
 						break
 					case 'bool':
-						// t.boolean(field);
 						t.specificType(field, 'TINYINT(1)');
 						break
 					case 'text':
