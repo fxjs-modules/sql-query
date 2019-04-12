@@ -10,17 +10,17 @@ describe('update', () => {
 
     assert.equal(
       common.Update(queryOptions).into('table1').set({ col: 1 }).build(),
-      "update `table1` set `col` = '1'"
+      "update `table1` set `col` = 1"
     )
 
     assert.equal(
       common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).build(),
-      "update `table1` set `col1` = '1', `col2` = '2'"
+      "update `table1` set `col1` = 1, `col2` = 2"
     )
 
     assert.equal(
       common.Update(queryOptions).into('table1').set({ col1: 1, col2: 2 }).where({ id: 3 }).build(),
-      "update `table1` set `col1` = '1', `col2` = '2' where `id` = 3"
+      "update `table1` set `col1` = 1, `col2` = 2 where `id` = 3"
     )
   })
 
