@@ -1,5 +1,7 @@
 /// <reference path="../@types/index.d.ts" />
 
+import { escapeValIfNotString } from "./Helpers";
+
 export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 	private sql: FxSqlQuerySql.SqlQueryChainDescriptor = {};
 
@@ -14,29 +16,24 @@ export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 		return this;
 	}
 	build () {
-		var query = [], cols = [], vals = [];
-
 		const sqlBuilder = this.Dialect.knex(this.sql.table);
-
-		query.push("INSERT INTO");
-		query.push(this.Dialect.escapeId(this.sql.table));
+		const col_vals = <{[k: string]: any}>{};
 
 		if (this.sql.hasOwnProperty("set")) {
+			let val = null;
 			for (let k in this.sql.set) {
-				cols.push(this.Dialect.escapeId(k));
-				vals.push(this.Dialect.escapeVal(this.sql.set[k], this.opts.timezone));
-			}
-			if (cols.length == 0) {
-				query.push(this.Dialect.defaultValuesStmt);
-			} else {
-				query.push("(" + cols.join(", ") + ")");
-				query.push("VALUES (" + vals.join(", ") + ")");
+				val = escapeValIfNotString(this.sql.set[k], this.Dialect, this.opts);;
+
+				col_vals[k] = val;
 			}
 
-			sqlBuilder.insert(this.sql.set)
+			if (false /* if no k */) {
+				// query.push(this.Dialect.defaultValuesStmt);
+			}
+
+			sqlBuilder.insert(col_vals)
 		}
 
 		return sqlBuilder.toQuery();
-		// return query.join(" ");
 	}
 }
