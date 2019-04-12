@@ -23,7 +23,7 @@ describe('where-custom-types', () => {
 	assert.equal(
 		common.Select().from('table1').where({ col: Point(1, 2) }).build(),
 		// "SELECT * FROM `table1` WHERE `col` = POINT(1 2)"
-		"select * from `table1` where `col` = 'POINT(1 2)'"
+		"select * from `table1` where `col` = POINT(1 2)"
 	);
 
 	assert.equal(
