@@ -12,7 +12,17 @@ var Point = function () {
 	};
 };
 
+var randomBuffer = function () {
+	const t = Date.now()
+	return {
+		string: t,
+		buf: Buffer.from(t)
+	}
+}
+
 describe('insert', () => {
+  var bufInfo = randomBuffer();
+
   it('insert - mysql', () => {
 	const queryOptions = { dialect: 'mysql' };
 
@@ -35,6 +45,11 @@ describe('insert', () => {
       common.Insert(queryOptions).into('table1').set({ col1: 1, col2: Point(1, 2) }).build(),
       "insert into `table1` (`col1`, `col2`) values (1, POINT(1, 2))"
     )
+
+    assert.equal(
+      common.Insert(queryOptions).into('table1').set({ col1: 1, col2: bufInfo.buf }).build(),
+      "insert into `table1` (`col1`, `col2`) values (1, X'" + Buffer.from(bufInfo.string).toString("hex") + "')"
+    )
   })
 
   it('insert - sqlite', () => {
@@ -53,6 +68,11 @@ describe('insert', () => {
     assert.equal(
       common.Insert(queryOptions).into('table1').set({ col1: 1, col2: 'a' }).build(),
       "insert into `table1` (`col1`, `col2`) values (1, 'a')"
+    )
+
+    assert.equal(
+      common.Insert(queryOptions).into('table1').set({ col1: 1, col2: bufInfo.buf }).build(),
+      "insert into `table1` (`col1`, `col2`) values (1, X'" + Buffer.from(bufInfo.string).toString("hex") + "')"
     )
   })
 })
