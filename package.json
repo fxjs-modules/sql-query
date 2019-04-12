@@ -1,5 +1,5 @@
 {
-	"version": "0.4.0-dev",
+	"version": "0.4.0",
 	"name": "@fxjs/sql-query",
 	"types": "@types/index.d.ts",
 	"author": "Richard <richardo2016@gmail.com>",
@@ -36,10 +36,11 @@
 		"fib-typify": "^0.4.1",
 		"rollup-plugin-commonjs": "^9.2.0",
 		"@types/node": "^11.13.0",
-		"knex": "^0.16.3"
+		"knex": "^0.16.3",
+		"@fxjs/knex": "^0.1.1"
 	},
 	"peerDependencies": {
-		"@fxjs/knex": ">= 0.1.0 < 0.2.0"
+		"@fxjs/knex": ">= 0.1.1 < 0.2.0"
 	},
 	"ci": {
 		"type": "travis, appveyor",
@@ -52,8 +53,5 @@
 			"0.26.0",
 			"0.26.1"
 		]
-	},
-	"dependencies": {
-		"@fxjs/knex": "^0.1.1"
 	}
 }

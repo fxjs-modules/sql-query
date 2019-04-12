@@ -1,7 +1,31 @@
 
-v0.3.0 / 2019-03-18
+v0.4.0 / 2019-04-12
 ==================
 
+  * code clean and fix.
+  * robust about knex Dialect.
+  * robust about sqlite's literal boolean value.
+  * fix migration about Dialect's escape for buffer-type value.
+  * normalize old code, pointless.
+  * fix migration for Insert.ts
+  * fix migration for Update.ts
+  * [Where.ts] fix migration for whereExists.
+  * [Select.ts]robust about order.
+  * robust about Where.ts
+  * code clean.
+  * support Where.ts, little fix.
+  * support Select.ts
+  * support limit/offset
+  * support Insert.ts
+  * support  Update.ts
+  * support Remove.ts
+  * [WIP] use @fxjs/knex as sql builder, apply it in Create.ts
+  * little fix.
+
+v0.3.0 / 2019-03-18
+===================
+
+  * Release v0.3.0
   * code normalization.
   * semantic internal object.
   * 0.3.0-dev
