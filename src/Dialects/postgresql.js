@@ -46,7 +46,7 @@ exports.escapeVal = function (val, timeZone) {
 	}
 
 	if (Buffer.isBuffer(val)) {
-		return "'\\x" + val.toString("hex") + "'";
+		return helpers.bufferToString( val, 'postgresql');
 	}
 
 	switch (typeof val) {
