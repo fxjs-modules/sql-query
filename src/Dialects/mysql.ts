@@ -39,7 +39,7 @@ function escapeVal (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) {
 	}
 
 	if (Buffer.isBuffer(val)) {
-		return bufferToString(val);
+		return helpers.bufferToString( val, 'mysql');
 	}
 
 	if (Array.isArray(val)) {
@@ -100,12 +100,6 @@ function arrayToList(array: any[], timeZone?: FxSqlQuery.FxSqlQueryTimezone): st
 		if (Array.isArray(v)) return arrayToList(v);
 		return escapeVal(v, timeZone);
 	}).join(', ') + ")";
-}
-
-function bufferToString(buffer: Class_Buffer) {
-	var hex = buffer.toString('hex');
-
-	return "X'" + hex+ "'";
 }
 
 const Dialect: FxSqlQueryDialect.Dialect = {

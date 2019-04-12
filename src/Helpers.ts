@@ -148,6 +148,19 @@ export function ensureNumber (num: any) {
 	return num;
 }
 
+export function bufferToString (buffer: Class_Buffer | Buffer, dialect: FxSqlQueryDialect.DialectType) {
+	switch (dialect) {
+		case 'mssql':
+			return "X'" + buffer.toString("hex") + "'";
+		case 'mysql':
+			return "X'" + buffer.toString('hex')+ "'";
+		case 'sqlite':
+			return "X'" + buffer.toString("hex") + "'";
+		case 'postgresql':
+			return "'\\x" + buffer.toString("hex") + "'";
+	}
+}
+
 export function escapeValIfNotString (val: any, Dialect: FxSqlQueryDialect.Dialect, opts: FxSqlQuery.ChainBuilderOptions) {
 	// never escapeVal with those types, knex would escape them automatically
 	const _type = typeof val;
@@ -161,6 +174,7 @@ export function escapeValIfNotString (val: any, Dialect: FxSqlQueryDialect.Diale
 	else if (_type === 'function')
 		return Dialect.knex.raw( val(Dialect) );
 	else if (val instanceof Date)
+		// TODO: how to suppor timezone?
 		return val;
 	else if (val instanceof Array)
 		return val;

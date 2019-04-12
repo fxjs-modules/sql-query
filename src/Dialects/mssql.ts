@@ -51,7 +51,7 @@ const escapeVal = function (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) 
 	}
 
 	if (Buffer.isBuffer(val)) {
-		return "X'" + val.toString("hex") + "'";
+		return helpers.bufferToString( val, 'mssql');
 	}
 
 	switch (typeof val) {
