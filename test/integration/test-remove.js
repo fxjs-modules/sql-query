@@ -4,10 +4,7 @@ test.setup()
 var common = require('../common')
 var assert = require('assert')
 
-describe('remove', () => {
-  it('remove - mysql', () => {
-	const queryOptions = { dialect: 'mysql' };
-
+function shared(queryOptions) {
     assert.equal(
       common.Remove(queryOptions).from('table1').build(),
       'delete from `table1`'
@@ -48,7 +45,54 @@ describe('remove', () => {
       common.Remove(queryOptions).from('table1').order('col1', 'A').order('col2', 'Z').limit(5).build(),
       'delete from `table1` ORDER BY `col1` ASC, `col2` DESC LIMIT 5'
     )
-  })
+}
+
+describe('remove', () => {
+  it('remove - mysql', () => {
+	const queryOptions = { dialect: 'mysql' };
+	shared(queryOptions)
+  });
+
+  it('remove - sqlite', () => {
+	const queryOptions = { dialect: 'sqlite' };
+	shared(queryOptions)
+  });
+
+  xit('remove - mssql', () => {
+	const queryOptions = { dialect: 'mssql' };
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').build(),
+    )
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').where({ col: 1 }).build(),
+    )
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').where({ col1: 1 }, { col2: 2 }).build(),
+    )
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').where({ or: [{ col: 1 }, { col: 2 }] }).build(),
+    )
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').limit(10).build(),
+    )
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').limit(10).offset(3).build(),
+    )
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').order('col').limit(5).build(),
+    )
+
+    assert.equal(
+      common.Remove(queryOptions).from('table1').order('col1', 'A').order('col2', 'Z').limit(5).build(),
+    )
+  });
 })
 
 if (require.main === module) {

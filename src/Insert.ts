@@ -1,6 +1,6 @@
 /// <reference path="../@types/index.d.ts" />
 
-import { escapeValIfNotString } from "./Helpers";
+import { escapeValForKnex } from "./Helpers";
 
 export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 	private sql: FxSqlQuerySql.SqlQueryChainDescriptor = {};
@@ -22,13 +22,9 @@ export class InsertQuery implements FxSqlQuery.ChainBuilder__Insert {
 		if (this.sql.hasOwnProperty("set")) {
 			let val = null;
 			for (let k in this.sql.set) {
-				val = escapeValIfNotString(this.sql.set[k], this.Dialect, this.opts);;
+				val = escapeValForKnex(this.sql.set[k], this.Dialect, this.opts);;
 
 				col_vals[k] = val;
-			}
-
-			if (false /* if no k */) {
-				// query.push(this.Dialect.defaultValuesStmt);
 			}
 
 			sqlBuilder.insert(col_vals)

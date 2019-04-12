@@ -103,11 +103,11 @@ function arrayToList(array: any[], timeZone?: FxSqlQuery.FxSqlQueryTimezone): st
 }
 
 const Dialect: FxSqlQueryDialect.Dialect = {
+	type: 'mysql',
 	DataTypes,
 	escape,
 	escapeId,
 	escapeVal,
-	defaultValuesStmt: "VALUES()",
 	limitAsTop: false,
 	knex: null
 }

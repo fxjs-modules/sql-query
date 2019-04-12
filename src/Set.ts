@@ -1,5 +1,5 @@
 import Knex = require('knex')
-import { escapeValIfNotString } from './Helpers';
+import { escapeValForKnex } from './Helpers';
 
 export function build (
 	knexQueryBuilder: Knex.QueryBuilder,
@@ -16,7 +16,7 @@ export function build (
 	const safeSet: typeof set = {};
 
 	for (let k in set) {
-		safeSet[k] = escapeValIfNotString(set[k], this.Dialect, opts)
+		safeSet[k] = escapeValForKnex(set[k], this.Dialect, opts)
 	}
 
 	knexQueryBuilder.update(safeSet);

@@ -9,29 +9,14 @@ export function build (
 	Dialect: FxSqlQueryDialect.Dialect,
 	whereList: FxSqlQuerySubQuery.SubQueryBuildDescriptor[],
 	opts: FxSqlQuery.ChainBuilderOptions
-): string | string[] {
+): void {
 	if (whereList.length === 0) {
-		return [];
+		return ;
 	}
-
-	var query = [],
-		subquery;
 
 	for (let i = 0; i < whereList.length; i++) {
-		subquery = buildOrGroup(knexQueryBuilder, Dialect, whereList[i], opts);
-
-		if (subquery !== false) {
-			query.push(subquery);
-		}
+		buildOrGroup(knexQueryBuilder, Dialect, whereList[i], opts);
 	}
-
-	if (query.length === 0) {
-		return [];
-	} else if (query.length == 1) {
-		return "WHERE " + query[0];
-	}
-
-	return "WHERE (" + query.join(") AND (") + ")";
 };
 
 const WHERE_CONJUNCTIONS = [ "or", "and", "not_or", "not_and", "not" ];
@@ -187,11 +172,11 @@ function buildOrGroup(
 					break;
 				case "like":
 					innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, 'like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
+					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, 'like', Helpers.escapeValForKnex(non_conj_where_conditem_value.expr, Dialect, opts))
 					break;
 				case "not_like":
 					innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, 'not like', Helpers.escapeValIfNotString(non_conj_where_conditem_value.expr, Dialect, opts))
+					knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, 'not like', Helpers.escapeValForKnex(non_conj_where_conditem_value.expr, Dialect, opts))
 					break;
 				case "eq":
 				case "ne":
@@ -214,10 +199,10 @@ function buildOrGroup(
 
 					if (!isInStyleOperator(op, non_conj_where_conditem_value)) {
 						innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-						knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
+						knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, transformed_result_op, Helpers.escapeValForKnex(non_conj_where_conditem_value.val, Dialect, opts))
 					} else {
 						innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
-						knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, transformed_result_op, Helpers.escapeValIfNotString(non_conj_where_conditem_value.val, Dialect, opts))
+						knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, transformed_result_op, Helpers.escapeValForKnex(non_conj_where_conditem_value.val, Dialect, opts))
 					}
 
 					break;
@@ -237,13 +222,13 @@ function buildOrGroup(
 			 */
 			if (Array.isArray(non_conj_where_conditem_value)) {
 				innerOperator = selectWhereOperatorByCtx(nextPrefixedOpWord, 'in').nextOperator
-				knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, Helpers.escapeValIfNotString(non_conj_where_conditem_value, Dialect, opts))
+				knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, Helpers.escapeValForKnex(non_conj_where_conditem_value, Dialect, opts))
 			} else { // finally, simplest where-equal
 				const simple_value = non_conj_where_conditem_value as any
 
 				innerOperator = innerOperator || selectWhereOperatorByCtx(nextPrefixedOpWord).nextOperator
 
-				knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, Helpers.escapeValIfNotString(simple_value, Dialect, opts))
+				knexQueryBuilder[innerOperator].call(knexQueryBuilder, normalizedKey, Helpers.escapeValForKnex(simple_value, Dialect, opts))
 			}
 		}
 	}

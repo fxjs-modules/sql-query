@@ -75,11 +75,11 @@ const escapeVal = function (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) 
 };
 
 const Dialect: FxSqlQueryDialect.Dialect = {
+	type: 'mssql',
 	DataTypes,
 	escape,
 	escapeId,
 	escapeVal,
-	defaultValuesStmt: "DEFAULT VALUES",
 	limitAsTop: true,
 	knex: null
 }

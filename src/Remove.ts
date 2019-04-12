@@ -25,23 +25,13 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		return this;
 	}
 	build () {
-		var query: FxSqlQuerySql.SqlQueryStr[] = [];
+		var extraQuery: FxSqlQuerySql.SqlQueryStr[] = [];
 
 		const sqlBuilder = this.Dialect.knex(this.sql.table)
 
-		// limit as: SELECT TOP n (MSSQL only)
-		if (this.Dialect.limitAsTop && this.sql.hasOwnProperty("limit")) {
-			query.push("DELETE TOP " + this.sql.limit + " FROM");
-		} else {
-			query.push("DELETE FROM");
-		}
-		query.push(this.Dialect.escapeId(this.sql.table));
+		Where.build(sqlBuilder, this.Dialect, this.sql.where as FxSqlQuerySubQuery.SubQueryBuildDescriptor[], this.opts);
 
-		query = query.concat(
-			Where.build(sqlBuilder, this.Dialect, this.sql.where as FxSqlQuerySubQuery.SubQueryBuildDescriptor[], this.opts)
-		);
-
-		sqlBuilder.del()
+		sqlBuilder.del();
 
 		const sqlList = [sqlBuilder.toQuery()];
 
@@ -62,9 +52,8 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 			}
 
 			if (tmp.length > 0) {
-				query.push("ORDER BY " + tmp.join(", "));
-
-				sqlList.push(util.last(query));
+				extraQuery.push("ORDER BY " + tmp.join(", "));
+				sqlList.push(util.last(extraQuery));
 			}
 		}
 
@@ -72,20 +61,22 @@ export class RemoveQuery implements FxSqlQuery.ChainBuilder__Remove {
 		if (!this.Dialect.limitAsTop) {
 			if (this.sql.hasOwnProperty("limit")) {
 				if (this.sql.hasOwnProperty("offset")) {
-					query.push("LIMIT " + this.sql.limit + " OFFSET " + this.sql.offset);
+					extraQuery.push("LIMIT " + this.sql.limit + " OFFSET " + this.sql.offset);
 				} else {
-					query.push("LIMIT " + this.sql.limit);
+					extraQuery.push("LIMIT " + this.sql.limit);
 				}
 
-				sqlList.push(util.last(query))
+				sqlList.push(util.last(extraQuery))
 			} else if (this.sql.hasOwnProperty("offset")) {
-				query.push("OFFSET " + this.sql.offset);
+				extraQuery.push("OFFSET " + this.sql.offset);
 				sqlBuilder.offset(this.sql.offset);
 
-				sqlList.push(util.last(query))
+				sqlList.push(util.last(extraQuery))
 			}
+		// limit as: SELECT TOP n (MSSQL only)
+		} else if (this.sql.hasOwnProperty("limit")) {
+			sqlList[0].replace('delete from', `delete top ${this.sql.limit}`)
 		}
-
 
 		return sqlList.join(' ');
 	}

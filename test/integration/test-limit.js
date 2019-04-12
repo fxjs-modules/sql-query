@@ -32,6 +32,20 @@ describe('limit', () => {
 		"select * from `table1` limit 123456789"
 	);
   });
+
+  xit('limit - mssql', () => {
+	const queryOptions = { dialect: 'mssql' }
+
+	assert.equal(
+		common.Select(queryOptions).from('table1').limit(123).build(),
+		"select * from [table1] limit 123"
+	);
+
+	assert.equal(
+		common.Select(queryOptions).from('table1').limit('123456789').build(),
+		"select * from [table1] limit 123456789"
+	);
+  });
 })
 
 if (require.main === module) {
