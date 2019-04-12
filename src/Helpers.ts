@@ -171,8 +171,12 @@ export function escapeValIfNotString (val: any, Dialect: FxSqlQueryDialect.Diale
 		return val;
 	else if (_type === 'symbol')
 		return val = null;
-	else if (_type === 'boolean')
+	else if (_type === 'boolean') {
+		if (Dialect.DataTypes.isSQLITE)
+			return val ? 1 : 0;
+
 		return val;
+	}
 	else if (_type === 'function')
 		return Dialect.knex.raw( val(Dialect) );
 	else if (val instanceof Date)
