@@ -1,4 +1,6 @@
-import FKnex = require('@fxjs/knex')
+import util = require('util');
+
+import FKnex = require('@fxjs/knex');
 import { DialectTypes } from "./Helpers";
 
 import { CreateQuery } from "./Create";
@@ -53,8 +55,13 @@ export class Query implements FxSqlQuery.Class_Query {
 
 		opts.dialect = opts.dialect || 'mysql';
 
-		this.Dialect = Dialects[opts.dialect];
-		this.Dialect.knex = FKnex({ client: opts.dialect, useNullAsDefault: true });
+		// TODO: use really fresh dialect rather than shallow copy.
+		this.Dialect = util.extend({}, Dialects[opts.dialect]);
+		Object.defineProperty(this.Dialect, 'knex', {
+			value: FKnex({ client: opts.dialect, useNullAsDefault: true }),
+			writable: false,
+			configurable: false
+		})
 
 		this.escape = this._proxyFn('escape')
 		this.escapeId = this._proxyFn('escapeId')
