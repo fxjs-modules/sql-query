@@ -15,7 +15,7 @@ declare module "@fxjs/sql-query" {
     export const Text: FxSqlQuery.TypedQueryObjectWrapper<'text'>
 	export const Helpers: FxSqlQueryHelpler.HelperModule
 
-	export const Dielects: {
+	export const Dialects: {
 		mysql: FxSqlQueryDialect.Dialect
 		sqlite: FxSqlQueryDialect.Dialect
 		mssql: FxSqlQueryDialect.Dialect
