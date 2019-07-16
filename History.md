@@ -1,7 +1,13 @@
 
-v0.4.0 / 2019-04-12
+v0.5.0 / 2019-07-16
 ==================
 
+  * feat, clean: remove top-level Compartors; lazy-load @fxjs/knex; upgrade dependencies.
+
+v0.4.0 / 2019-04-12
+===================
+
+  * Release v0.4.0
   * code clean and fix.
   * robust about knex Dialect.
   * robust about sqlite's literal boolean value.
