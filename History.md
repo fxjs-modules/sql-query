@@ -1,7 +1,13 @@
 
-v0.5.0 / 2019-07-16
+v0.5.1 / 2019-07-16
 ==================
 
+  * typo fix.
+
+v0.5.0 / 2019-07-16
+===================
+
+  * Release v0.5.0
   * feat, clean: remove top-level Compartors; lazy-load @fxjs/knex; upgrade dependencies.
 
 v0.4.0 / 2019-04-12
