@@ -18,7 +18,7 @@
 		"test": "fibjs test/run",
 		"test:rollup": "cross-env ENTRY_SUFFIX=.cjs.js fibjs test/vbox",
 		"ci": "npm run build && npm run test",
-		"ci:rollup": "npm run build:rollup && npm run test:rollup",
+		"ci:rollup": "npm run build && npm run build:rollup && npm run test:rollup",
 		"prepublishOnly": "npm run build && npm run ci:rollup"
 	},
 	"main": "./lib/Query",
@@ -29,18 +29,19 @@
 	},
 	"analyse": false,
 	"devDependencies": {
-		"@fibjs/ci": "^2.1.0",
-		"@types/fibjs": "^0.26.5",
+		"@fibjs/ci": "^2.2.0",
+		"@fibjs/types": "^0.27.1",
+		"@fxjs/knex": "^0.1.1",
+		"@types/node": "^11.13.0",
 		"cross-env": "^5.2.0",
 		"fib-rollup": "^0.4.0",
-		"fib-typify": "^0.4.1",
-		"rollup-plugin-commonjs": "^9.2.0",
-		"@types/node": "^11.13.0",
+		"fib-typify": "^0.6.0",
 		"knex": "^0.16.3",
-		"@fxjs/knex": "^0.1.1"
+		"rollup-plugin-commonjs": "^9.2.0"
 	},
 	"peerDependencies": {
-		"@fxjs/knex": ">= 0.1.1 < 0.2.0"
+		"@fxjs/knex": ">= 0.1.1 < 0.2.0",
+		"knex": ">= 0.14.0 < 0.17.0"
 	},
 	"ci": {
 		"type": "travis, appveyor",
@@ -51,7 +52,8 @@
 			"0.24.0",
 			"0.25.0",
 			"0.26.0",
-			"0.26.1"
+			"0.26.1",
+			"0.27.0"
 		]
 	}
 }

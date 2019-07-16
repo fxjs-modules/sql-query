@@ -22,7 +22,7 @@ npm install sql-query --save
 ## About
 
 This module is used by [@fxjs/orm](https://github.com/fxjs-modules/orm) to build SQL queries in the different supported dialects.
-Sorry the API documentation is not complete. There are tests in ./test/integration that you can read.
+Sorry the API documentation is not complete. There are tests in `./test/integration` that you could read.
 
 
 # Usage

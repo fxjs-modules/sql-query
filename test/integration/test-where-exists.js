@@ -34,8 +34,8 @@ describe('where-exists', () => {
           ['id1', 'id2']
         ],
         {
-          col1: common.Query.ne(1),
-          col2: common.Query.gte(2)
+          col1: common.Query.comparators.ne(1),
+          col2: common.Query.comparators.gte(2)
         }
       ).build(),
     // 'SELECT * FROM `table1` `t1` WHERE EXISTS (SELECT * FROM `table2` WHERE `fid1` = `t1`.`id1` AND `fid2` = `t1`.`id2` AND `col1` <> 1 AND `col2` >= 2)'
@@ -50,8 +50,8 @@ describe('where-exists', () => {
           ['id1', 'id2', 'id3']
         ],
         {
-          col1: common.Query.ne(1),
-          col2: common.Query.gte(2)
+          col1: common.Query.comparators.ne(1),
+          col2: common.Query.comparators.gte(2)
         }
       ).build(),
     // 'SELECT * FROM `table1` `t1` WHERE EXISTS (SELECT * FROM `table2` WHERE `fid1` = `t1`.`id1` AND `fid2` = `t1`.`id2` AND `fid3` = `t1`.`id3` AND `col1` <> 1 AND `col2` >= 2)'

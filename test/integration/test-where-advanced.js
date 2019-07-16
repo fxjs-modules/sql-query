@@ -38,7 +38,7 @@ describe('where-advanced', () => {
 		);
 
 		assert.equal(
-			common.Select().from('table1').where({ not: [ { col: common.Query.gt(2) }, { col: 3 } ] }).build(),
+			common.Select().from('table1').where({ not: [ { col: common.Query.comparators.gt(2) }, { col: 3 } ] }).build(),
 			// "SELECT * FROM `table1` WHERE NOT ((`col` > 2) AND (`col` = 3))"
 			"select * from `table1` where (not (`col` > 2) and not (`col` = 3))"
 		);
@@ -66,9 +66,9 @@ describe('where-advanced', () => {
 				not: [{
 					col: 1,
 					or: [{
-						col: common.Query.gte(2)
+						col: common.Query.comparators.gte(2)
 					}, {
-						col: common.Query.lt(3)
+						col: common.Query.comparators.lt(3)
 					}]
 				}, {
 					col: 4

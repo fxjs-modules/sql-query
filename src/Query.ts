@@ -2,7 +2,6 @@
 
 import util = require('util');
 
-import FKnex = require('@fxjs/knex');
 import { DialectTypes } from "./Helpers";
 
 import { CreateQuery } from "./Create";
@@ -12,17 +11,17 @@ import { UpdateQuery } from "./Update";
 import { RemoveQuery } from "./Remove";
 
 import ComparatorsHash 	= require("./Comparators");
-import _Helpers     		= require('./Helpers');
-import Dialects 		= require('./Dialects')
+export import Helpers     		= require('./Helpers');
+export import Dialects 		= require('./Dialects')
 
 export const comparators = ComparatorsHash;
-export const Helpers: FxSqlQueryHelpler.HelperModule = _Helpers;
 export const Text: FxSqlQuery.TypedQueryObjectWrapper<"text"> = buildQueryType<"text">("text");
 
 function mountKnex (
 	this: FxSqlQuery.Class_Query,
 	Dialect: FxSqlQuery.Class_Query['Dialect']
 ) {
+	const FKnex = require('@fxjs/knex');
 	// TODO: use really fresh dialect rather than shallow copy.
 	this.Dialect = util.extend({}, Dialect);
 	Object.defineProperty(this.Dialect, 'knex', {
@@ -119,19 +118,3 @@ function buildQueryType<T = string, TD = any>(type: T): FxSqlQuery.TypedQueryObj
 		return o;
 	};
 }
-
-// deprecated :start
-// use comparators plz
-export const Comparators = Object.keys(ComparatorsHash);
-export const between = ComparatorsHash.between
-export const not_between = ComparatorsHash.not_between
-export const like = ComparatorsHash.like
-export const not_like = ComparatorsHash.not_like
-export const eq = ComparatorsHash.eq
-export const ne = ComparatorsHash.ne
-export const gt = ComparatorsHash.gt
-export const gte = ComparatorsHash.gte
-export const lt = ComparatorsHash.lt
-export const lte = ComparatorsHash.lte
-export const not_in = ComparatorsHash.not_in
-// deprecated :start

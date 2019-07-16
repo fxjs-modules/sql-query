@@ -36,13 +36,13 @@ function shared (queryOptions) {
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.eq(null) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.eq(null) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` IS NULL'
     'select * from `table1` where `col` is null'
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.ne(null) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.ne(null) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` IS NOT NULL'
     'select * from `table1` where `col` is not null'
   )
@@ -142,67 +142,67 @@ function shared (queryOptions) {
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.gt(1) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.gt(1) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` > 1'
     'select * from `table1` where `col` > 1'
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.gte(1) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.gte(1) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` >= 1'
     'select * from `table1` where `col` >= 1'
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.lt(1) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.lt(1) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` < 1'
     'select * from `table1` where `col` < 1'
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.lte(1) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.lte(1) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` <= 1'
     'select * from `table1` where `col` <= 1'
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.eq(1) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.eq(1) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` = 1'
     'select * from `table1` where `col` = 1'
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.ne(1) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.ne(1) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` <> 1'
     'select * from `table1` where `col` <> 1'
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.between('a', 'b') }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.between('a', 'b') }).build(),
     // "SELECT * FROM `table1` WHERE `col` BETWEEN 'a' AND 'b'"
     "select * from `table1` where `col` between 'a' and 'b'"
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.not_between('a', 'b') }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.not_between('a', 'b') }).build(),
     // "SELECT * FROM `table1` WHERE `col` NOT BETWEEN 'a' AND 'b'"
     "select * from `table1` where `col` not between 'a' and 'b'"
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.like('abc') }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.like('abc') }).build(),
     // "SELECT * FROM `table1` WHERE `col` LIKE 'abc'"
     "select * from `table1` where `col` like 'abc'"
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.not_like('abc') }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.not_like('abc') }).build(),
     // "SELECT * FROM `table1` WHERE `col` NOT LIKE 'abc'"
     "select * from `table1` where `col` not like 'abc'"
   )
 
   assert.equal(
-    common.Select(queryOptions).from('table1').where({ col: common.Query.not_in([ 1, 2, 3 ]) }).build(),
+    common.Select(queryOptions).from('table1').where({ col: common.Query.comparators.not_in([ 1, 2, 3 ]) }).build(),
     // 'SELECT * FROM `table1` WHERE `col` NOT IN (1, 2, 3)'
     'select * from `table1` where `col` not in (1, 2, 3)'
   )

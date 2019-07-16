@@ -1,4 +1,4 @@
-/// <reference types="fibjs" />
+/// <reference types="@fibjs/types" />
 /// <reference types="@fxjs/knex" />
 
 /// <reference path="Helper.d.ts" />
@@ -15,5 +15,10 @@ declare module "@fxjs/sql-query" {
     export const Text: FxSqlQuery.TypedQueryObjectWrapper<'text'>
 	export const Helpers: FxSqlQueryHelpler.HelperModule
 
+	export const Dielects: {
+		mysql: FxSqlQueryDialect.Dialect
+		sqlite: FxSqlQueryDialect.Dialect
+		mssql: FxSqlQueryDialect.Dialect
+	}
     export const Query: typeof FxSqlQuery.Class_Query
 }
