@@ -37,7 +37,7 @@ declare namespace FxSqlQueryDialect {
 
 		limitAsTop: boolean
 
-		readonly knex: FXJSKnex.FXJSKnexModule.KnexInstance
+		readonly knex: FKnexNS.KnexInstance
 	}
 
 	type fn_escape = Dialect['escape']

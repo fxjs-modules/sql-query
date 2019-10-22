@@ -50,4 +50,22 @@ declare namespace FxSqlQuery {
 		update: () => ChainBuilder__Update
 		remove: () => ChainBuilder__Remove
 	}
+
+	interface ExportModule {
+		comparators: FxSqlQueryComparator.ComparatorHash
+		Text: FxSqlQuery.TypedQueryObjectWrapper<'text'>
+		Helpers: FxSqlQueryHelpler.HelperModule
+
+		Dialects: {
+			mysql: FxSqlQueryDialect.Dialect
+			sqlite: FxSqlQueryDialect.Dialect
+			mssql: FxSqlQueryDialect.Dialect
+		}
+		Query: typeof FxSqlQuery.Class_Query
+	}
+}
+
+declare module "@fxjs/sql-query" {
+	var m: FxSqlQuery.ExportModule
+	export = m
 }

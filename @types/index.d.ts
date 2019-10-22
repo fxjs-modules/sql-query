@@ -10,15 +10,5 @@
 /// <reference path="Field.d.ts" />
 /// <reference path="Dialect.d.ts" />
 
-declare module "@fxjs/sql-query" {
-    export const comparators: FxSqlQueryComparator.ComparatorHash
-    export const Text: FxSqlQuery.TypedQueryObjectWrapper<'text'>
-	export const Helpers: FxSqlQueryHelpler.HelperModule
-
-	export const Dialects: {
-		mysql: FxSqlQueryDialect.Dialect
-		sqlite: FxSqlQueryDialect.Dialect
-		mssql: FxSqlQueryDialect.Dialect
-	}
-    export const Query: typeof FxSqlQuery.Class_Query
-}
+declare var m: FxSqlQuery.ExportModule
+export = m

@@ -31,17 +31,16 @@
 	"devDependencies": {
 		"@fibjs/ci": "^2.2.0",
 		"@fibjs/types": "^0.27.1",
-		"@fxjs/knex": "^0.1.1",
+		"@fxjs/knex": "^0.2.0",
 		"@types/node": "^11.13.0",
 		"cross-env": "^5.2.0",
 		"fib-rollup": "^0.4.0",
 		"fib-typify": "^0.6.0",
-		"knex": "^0.16.3",
+		"knex": "^0.19.5",
 		"rollup-plugin-commonjs": "^9.2.0"
 	},
 	"peerDependencies": {
-		"@fxjs/knex": ">= 0.1.1 < 0.2.0",
-		"knex": ">= 0.14.0 < 0.17.0"
+		"@fxjs/knex": ">= 0.2.0"
 	},
 	"ci": {
 		"type": "travis, appveyor",
