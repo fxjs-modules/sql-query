@@ -79,7 +79,7 @@ export class Query implements FxSqlQuery.Class_Query {
 		this.escapeVal = this._proxyFn('escapeVal')
 	}
 
-	knex: FXJSKnex.FXJSKnexModule.KnexInstance
+	knex: FKnexNS.KnexInstance
 
 	escape: FxSqlQuery.Class_Query['escape']
 	escapeId: FxSqlQuery.Class_Query['escapeId']
