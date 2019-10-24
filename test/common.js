@@ -52,3 +52,11 @@ common.getDialect = function (dialect) {
 common.getProtocol = function () {
 	return process.env.QUERT_PROTOCOL || 'mysql'
 }
+
+common.isSupportBigInt = function(){
+	try{
+		var n = BigInt(12);
+		return true;
+	}catch(error){}
+	return false;
+}

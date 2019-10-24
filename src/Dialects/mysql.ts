@@ -62,6 +62,8 @@ function escapeVal (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) {
 				return objectToValues(val, timeZone || "Z");
 			case "function":
 				return val(Dialect);
+			case 'bigint':
+				return val.toString();
 		}
 	}
 

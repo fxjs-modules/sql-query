@@ -67,6 +67,8 @@ const escapeVal = function (val: any, timeZone?: FxSqlQuery.FxSqlQueryTimezone) 
 			return val(Dialect);
 		case "string":
 			break;
+		case "bigint":
+			return val.toString();
 		default:
 			val = JSON.stringify(val);
 	}
