@@ -39,6 +39,13 @@ describe('dialect-sqlite', () => {
       '123'
     )
 
+    if(common.isSupportBigInt()){
+      assert.equal(
+        dialect.escapeVal(BigInt(12)),
+        '12'
+      )
+    }
+
     assert.equal(
       dialect.escapeVal(NaN),
       "'NaN'"

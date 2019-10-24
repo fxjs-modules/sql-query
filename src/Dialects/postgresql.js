@@ -63,6 +63,8 @@ exports.escapeVal = function (val, timeZone) {
 			return val(exports);
 		case "string":
 			break;
+		case "bigint":
+			return val.toString();
 		default:
 			val = JSON.stringify(val);
 	}
